@@ -41,7 +41,7 @@ end)
 
 --Updates the taskbar when a weapon is found/task complete, different variables to handle when tasks are set to only update when a meeting starts
 net.Receive("AmongUsTaskBarUpdate", function()
-    if net.ReadBool() then
+    if GetGlobalBool("randomat_amongus_taskbar_update") then
         livefoundweps = net.ReadInt(16)
     else
         foundweps = net.ReadInt(16)
@@ -50,12 +50,8 @@ end)
 
 --All functions called when this randomat starts
 net.Receive("AmongUsInitialHooks", function()
-    --Allows changing of player walking speed like in among us
-    -- if GetConVar("randomat_amongus_player_speed"):GetFloat() ~= nil then
-    --     hook.Add("TTTPlayerSpeedModifier", "AmongUsPlayerSpeed", function() return GetConVar("randomat_amongus_player_speed"):GetFloat() end)
-    -- end
-    --Disables sprinting and handles a player pressing the emergency meeting button 
-    amongUsEmergencyMeetings = net.ReadInt(8)
+    --Displays a message if the sprint key is pressed and handles a player pressing the emergency meeting button 
+    amongUsEmergencyMeetings = GetGlobalInt("randomat_amongus_emergency_meetings")
 
     hook.Add("PlayerBindPress", "AmongUsRandomatBuyMenuDisable", function(ply, bind, pressed)
         if (string.find(bind, "+menu_context")) then
@@ -71,15 +67,15 @@ net.Receive("AmongUsInitialHooks", function()
                 ply:PrintMessage(HUD_PRINTTALK, "You are out of emergency meetings")
             elseif amongUsEmergencyMeetings > 0 then
                 amongUsEmergencyMeetings = amongUsEmergencyMeetings - 1
-                ply:PrintMessage(HUD_PRINTCENTER, "Calling an emergency meeting in " .. GetConVar("randomat_amongus_emergency_delay"):GetInt() .. " seconds!")
-                ply:PrintMessage(HUD_PRINTTALK, "Calling an emergency meeting in " .. GetConVar("randomat_amongus_emergency_delay"):GetInt() .. " seconds! \nYou have " .. amongUsEmergencyMeetings .. " emergency meeting(s) left.")
+                ply:PrintMessage(HUD_PRINTCENTER, "Calling an emergency meeting in " .. GetGlobalInt("randomat_amongus_emergency_delay") .. " seconds!")
+                ply:PrintMessage(HUD_PRINTTALK, "Calling an emergency meeting in " .. GetGlobalInt("randomat_amongus_emergency_delay") .. " seconds! \nYou have " .. amongUsEmergencyMeetings .. " emergency meeting(s) left.")
                 net.Start("AmongUsEmergencyMeeting")
                 net.SendToServer()
             end
 
             return true
         elseif (string.find(bind, "+speed")) then
-            ply:PrintMessage(HUD_PRINTCENTER, "Sprinting is disabled (Bar going down is nonce)")
+            ply:PrintMessage(HUD_PRINTCENTER, "Sprinting is disabled")
 
             return true
         end
@@ -92,11 +88,11 @@ net.Receive("AmongUsInitialHooks", function()
         render.FogMaxDensity(1)
 
         if LocalPlayer():GetRole() == ROLE_INNOCENT then
-            render.FogStart(300 * GetConVar("randomat_amongus_innocent_vision"):GetFloat())
-            render.FogEnd(600 * GetConVar("randomat_amongus_innocent_vision"):GetFloat())
+            render.FogStart(300 * GetGlobalFloat("randomat_amongus_innocent_vision"))
+            render.FogEnd(600 * GetGlobalFloat("randomat_amongus_innocent_vision"))
         else
-            render.FogStart(300 * GetConVar("randomat_amongus_traitor_vision"):GetFloat())
-            render.FogEnd(600 * GetConVar("randomat_amongus_traitor_vision"):GetFloat())
+            render.FogStart(300 * GetGlobalFloat("randomat_amongus_traitor_vision"))
+            render.FogEnd(600 * GetGlobalFloat("randomat_amongus_traitor_vision"))
         end
 
         return true
@@ -109,11 +105,11 @@ net.Receive("AmongUsInitialHooks", function()
         render.FogMaxDensity(1)
 
         if LocalPlayer():GetRole() == ROLE_INNOCENT then
-            render.FogStart(300 * GetConVar("randomat_amongus_innocent_vision"):GetFloat() * scale)
-            render.FogEnd(600 * GetConVar("randomat_amongus_innocent_vision"):GetFloat() * scale)
+            render.FogStart(300 * GetGlobalFloat("randomat_amongus_innocent_vision") * scale)
+            render.FogEnd(600 * GetGlobalFloat("randomat_amongus_innocent_vision") * scale)
         else
-            render.FogStart(300 * GetConVar("randomat_amongus_traitor_vision"):GetFloat() * scale)
-            render.FogEnd(600 * GetConVar("randomat_amongus_traitor_vision"):GetFloat() * scale)
+            render.FogStart(300 * GetGlobalFloat("randomat_amongus_traitor_vision") * scale)
+            render.FogEnd(600 * GetGlobalFloat("randomat_amongus_traitor_vision") * scale)
         end
 
         return true
@@ -140,7 +136,7 @@ net.Receive("AmongUsInitialHooks", function()
 
         --Drawing the taskbar
         hook.Add("DrawOverlay", "AmongUsTaskUI", function()
-            if GetConVar("randomat_amongus_taskbar_update"):GetBool() and meeting then
+            if GetGlobalBool("randomat_amongus_taskbar_update") and meeting then
                 foundweps = livefoundweps
             end
 

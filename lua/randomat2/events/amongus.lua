@@ -43,7 +43,8 @@ CreateConVar("randomat_amongus_emergency_meetings", 1, {FCVAR_ARCHIVE, FCVAR_NOT
 
 CreateConVar("randomat_amongus_anonymous_voting", 0, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Anonymous voting", 0, 1)
 
--- CreateConVar("randomat_amongus_player_speed", 1, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Player speed multiplier", 0.5, 3)
+CreateConVar("randomat_amongus_player_speed", 1, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Player speed multiplier", 0.5, 3)
+
 CreateConVar("randomat_amongus_innocent_vision", 1, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Innocent vision multiplier", 0.2, 5)
 
 CreateConVar("randomat_amongus_traitor_vision", 1.5, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Traitor vision multiplier", 0.2, 5)
@@ -127,7 +128,6 @@ function AmongUsVote(findername)
     --Updating everyone's taskbar if only update during meetings is enabled
     if GetConVar("randomat_amongus_taskbar_update"):GetBool() then
         net.Start("AmongUsTaskBarUpdate")
-        net.WriteBool(GetConVar("randomat_amongus_taskbar_update"):GetBool())
         net.WriteInt(amongUsFoundWeaponCount, 16)
         net.Broadcast()
     end
@@ -373,6 +373,25 @@ function AmongUsVoteEnd()
     end
 end
 
+-- Convars don't exist on the client... So global variables are used instead
+local function AmongUsConVarResync()
+    SetGlobalInt("randomat_amongus_voting_timer", GetConVar("randomat_amongus_voting_timer"):GetInt())
+    SetGlobalInt("randomat_amongus_discussion_timer", GetConVar("randomat_amongus_discussion_timer"):GetInt())
+    SetGlobalInt("randomat_amongus_votepct", GetConVar("randomat_amongus_votepct"):GetInt())
+    SetGlobalBool("randomat_amongus_freeze", GetConVar("randomat_amongus_freeze"):GetBool())
+    SetGlobalInt("randomat_amongus_knife_cooldown", GetConVar("randomat_amongus_knife_cooldown"):GetInt())
+    SetGlobalInt("randomat_amongus_emergency_delay", GetConVar("randomat_amongus_emergency_delay"):GetInt())
+    SetGlobalBool("randomat_amongus_confirm_ejects", GetConVar("randomat_amongus_confirm_ejects"):GetBool())
+    SetGlobalInt("randomat_amongus_emergency_meetings", GetConVar("randomat_amongus_emergency_meetings"):GetInt())
+    SetGlobalBool("randomat_amongus_anonymous_voting", GetConVar("randomat_amongus_anonymous_voting"):GetBool())
+    SetGlobalFloat("randomat_amongus_player_speed", GetConVar("randomat_amongus_player_speed"):GetFloat())
+    SetGlobalFloat("randomat_amongus_innocent_vision", GetConVar("randomat_amongus_innocent_vision"):GetFloat())
+    SetGlobalFloat("randomat_amongus_traitor_vision", GetConVar("randomat_amongus_traitor_vision"):GetFloat())
+    SetGlobalBool("randomat_amongus_taskbar_update", GetConVar("randomat_amongus_taskbar_update"):GetBool())
+    SetGlobalBool("randomat_amongus_auto_trigger", GetConVar("randomat_amongus_auto_trigger"):GetBool())
+    SetGlobalInt("randomat_amongus_task_threshhold", GetConVar("randomat_amongus_task_threshhold"):GetInt())
+end
+
 function EVENT:Begin()
     --Workaround to prevent the end function from being triggered before the begin function, letting know that the randomat has indeed been activated and the randomat end function is now allowed to be run
     amongusRandomat = true
@@ -386,6 +405,7 @@ function EVENT:Begin()
     wepspawns = 0
     DelayedTraitorVictory = false
     emergencyButtonTriggerCount = 0
+    AmongUsConVarResync()
 
     timer.Create("AmongUsPlayTimer", 1, 0, function()
         amongUsPlayTimeCount = amongUsPlayTimeCount + 1
@@ -427,10 +447,11 @@ function EVENT:Begin()
     --Disables opening the buy menu, which instead triggers an emergency meeting if the player is alive
     --Adds fog to lower the distance players can see
     --Adds the innocent 'task' progress bar
-    net.Start("AmongUsInitialHooks")
-    net.WriteInt(GetConVar("randomat_amongus_emergency_meetings"):GetInt(), 8)
-    net.WriteInt(wepspawns, 16)
-    net.Broadcast()
+    timer.Simple(2, function()
+        net.Start("AmongUsInitialHooks")
+        net.WriteInt(wepspawns, 16)
+        net.Broadcast()
+    end)
 
     --Kill any players trying to exploit the skip vote button to avoid any weird behaviour
     for k, v in pairs(self:GetAlivePlayers(true)) do
@@ -440,14 +461,8 @@ function EVENT:Begin()
         end
     end
 
-    --Disabling sprint if it's on
-    amongUsSprntingWasOn = false
-
-    if ConVarExists("ttt_sprint_enabled") then
-        amongUsSprntingWasOn = GetConVar("ttt_sprint_enabled"):GetBool()
-        GetConVar("ttt_sprint_enabled"):SetBool(false)
-    end
-
+    --Disabling sprint if it exists
+    hook.Remove("Think", "TTTSprintThink")
     --Thanks Desmos + Among Us wiki, this number of traitors ensures games do not instantly end with a double kill
     traitorCap = math.floor((player.GetCount() / 2) - 1.5)
 
@@ -747,7 +762,6 @@ function EVENT:Begin()
         timer.Create("AmongUsTotalWeaponDecrease", 20, 0, function()
             amongUsFoundWeaponCount = amongUsFoundWeaponCount + 1
             net.Start("AmongUsTaskBarUpdate")
-            net.WriteBool(GetConVar("randomat_amongus_taskbar_update"):GetBool())
             net.WriteInt(amongUsFoundWeaponCount, 16)
             net.Broadcast()
         end)
@@ -757,7 +771,6 @@ function EVENT:Begin()
             if wep.Kind == WEAPON_HEAVY or wep.Kind == WEAPON_PISTOL or wep.Kind == WEAPON_NADE or wep.Kind == WEAPON_NONE then
                 amongUsFoundWeaponCount = amongUsFoundWeaponCount + 1
                 net.Start("AmongUsTaskBarUpdate")
-                net.WriteBool(GetConVar("randomat_amongus_taskbar_update"):GetBool())
                 net.WriteInt(amongUsFoundWeaponCount, 16)
                 net.Broadcast()
                 timer.Start("AmongUsTotalWeaponDecrease")
@@ -788,7 +801,6 @@ function EVENT:Begin()
                     end
 
                     net.Start("AmongUsTaskBarUpdate")
-                    net.WriteBool(GetConVar("randomat_amongus_taskbar_update"):GetBool())
                     net.WriteInt(amongUsFoundWeaponCount, 16)
                     net.Broadcast()
 
@@ -888,8 +900,19 @@ function EVENT:Begin()
             end
         end)
     end
+
     --Walk speed can be changed like in among us
-    -- self:AddHook("TTTPlayerSpeedModifier", function() return GetConVar("randomat_amongus_player_speed"):GetFloat() end)
+    -- Scales the player speed on the client
+    net.Start("RdmtSetSpeedMultiplier")
+    net.WriteFloat(GetConVar("randomat_amongus_player_speed"):GetFloat())
+    net.WriteString("RdmtAmongUsSpeed")
+    net.Broadcast()
+
+    -- Scales the player speed on the server
+    self:AddHook("TTTSpeedMultiplier", function(ply, mults)
+        if not ply:Alive() or ply:IsSpec() then return end
+        table.insert(mults, GetConVar("randomat_amongus_player_speed"):GetFloat())
+    end)
 end
 
 --Emergency meeting starts after the configured delay if someone pressed the emergency meeting keybind
@@ -1002,11 +1025,6 @@ function EVENT:End()
         amongUsRemoveHurt = false
         --Resetting startup popup duration to default
         RunConsoleCommand("ttt_startpopup_duration", tostring(amongUsStartPopupDuration))
-
-        --Resetting the sprint convar to on, if it was on before the randomat
-        if amongUsSprntingWasOn then
-            GetConVar("ttt_sprint_enabled"):SetBool(true)
-        end
 
         --Turning blood back on
         for i, ply in pairs(player.GetAll()) do
