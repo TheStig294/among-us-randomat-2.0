@@ -506,9 +506,6 @@ function EVENT:Begin()
         net.Broadcast()
     end)
 
-    --Stopping the TTT role hint box from covering the among us intro images
-    amongUsStartPopupDuration = GetConVar("ttt_startpopup_duration"):GetInt()
-    RunConsoleCommand("ttt_startpopup_duration", "0")
     --Adding the colour table to a different table so if more than 12 people are playing, the choosable colours are able to be reset
     remainingColors = {}
     table.Add(remainingColors, auColors)
@@ -1023,8 +1020,6 @@ function EVENT:End()
         wepspawns = 0
         amongUsRoundOver = true
         amongUsRemoveHurt = false
-        --Resetting startup popup duration to default
-        RunConsoleCommand("ttt_startpopup_duration", tostring(amongUsStartPopupDuration))
 
         --Turning blood back on
         for i, ply in pairs(player.GetAll()) do

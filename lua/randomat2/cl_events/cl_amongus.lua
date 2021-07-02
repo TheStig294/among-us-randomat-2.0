@@ -50,6 +50,9 @@ end)
 
 --All functions called when this randomat starts
 net.Receive("AmongUsInitialHooks", function()
+    --Stopping the TTT role hint box from covering the among us intro images
+    amongUsStartPopupDuration = GetConVar("ttt_startpopup_duration"):GetInt()
+    RunConsoleCommand("ttt_startpopup_duration", "0")
     --Displays a message if the sprint key is pressed and handles a player pressing the emergency meeting button 
     amongUsEmergencyMeetings = GetGlobalInt("randomat_amongus_emergency_meetings")
 
@@ -262,6 +265,8 @@ net.Receive("AmongUsEventRoundEnd", function()
     firstEmergencyMeetingBindMessage = true
     foundweps = 0
     livefoundweps = 0
+    --Resetting startup popup duration to default
+    RunConsoleCommand("ttt_startpopup_duration", tostring(amongUsStartPopupDuration))
 end)
 
 --The intro popups shown when the randomat is started, dynamically changes with the number of traitors in the game
