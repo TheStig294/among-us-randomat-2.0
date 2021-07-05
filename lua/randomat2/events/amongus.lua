@@ -1082,7 +1082,7 @@ function EVENT:GetConVars()
         end
     end
 
-    for _, v in pairs({"innocent_vision", "traitor_vision"}) do
+    for _, v in pairs({"player_speed", "innocent_vision", "traitor_vision"}) do
         local name = "randomat_" .. self.id .. "_" .. v
 
         if ConVarExists(name) then

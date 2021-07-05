@@ -55,20 +55,21 @@ net.Receive("AmongUsInitialHooks", function()
     RunConsoleCommand("ttt_startpopup_duration", "0")
     --Displays a message if the sprint key is pressed and handles a player pressing the emergency meeting button 
     amongUsEmergencyMeetings = GetGlobalInt("randomat_amongus_emergency_meetings")
+    local firstPress = true
 
     hook.Add("PlayerBindPress", "AmongUsRandomatBuyMenuDisable", function(ply, bind, pressed)
         if (string.find(bind, "+menu_context")) then
-            if game.GetMap() == "ttt_amongusskeld" then
+            if game.GetMap() == "ttt_amongusskeld" and firstPress then
                 ply:PrintMessage(HUD_PRINTTALK, "To call an emergency meeting, find the emergency meeting button")
-            elseif ply:Alive() == false then
+            elseif ply:Alive() == false and firstPress then
                 ply:PrintMessage(HUD_PRINTTALK, "Dead people can't call emergency meetings")
-            elseif meeting then
+            elseif meeting and firstPress then
                 ply:PrintMessage(HUD_PRINTTALK, "A meeting is already in progress")
-            elseif amongUsEmergencyMeetingCalled then
+            elseif amongUsEmergencyMeetingCalled and firstPress then
                 ply:PrintMessage(HUD_PRINTTALK, "An emergency meeting has already been called!")
-            elseif amongUsEmergencyMeetings <= 0 then
+            elseif amongUsEmergencyMeetings <= 0 and firstPress then
                 ply:PrintMessage(HUD_PRINTTALK, "You are out of emergency meetings")
-            elseif amongUsEmergencyMeetings > 0 then
+            elseif amongUsEmergencyMeetings > 0 and firstPress then
                 amongUsEmergencyMeetings = amongUsEmergencyMeetings - 1
                 ply:PrintMessage(HUD_PRINTCENTER, "Calling an emergency meeting in " .. GetGlobalInt("randomat_amongus_emergency_delay") .. " seconds!")
                 ply:PrintMessage(HUD_PRINTTALK, "Calling an emergency meeting in " .. GetGlobalInt("randomat_amongus_emergency_delay") .. " seconds! \nYou have " .. amongUsEmergencyMeetings .. " emergency meeting(s) left.")
@@ -76,9 +77,15 @@ net.Receive("AmongUsInitialHooks", function()
                 net.SendToServer()
             end
 
+            if firstPress then
+                firstPress = false
+            else
+                firstPress = true
+            end
+
             return true
         elseif (string.find(bind, "+speed")) then
-            ply:PrintMessage(HUD_PRINTCENTER, "Sprinting is disabled")
+            ply:PrintMessage(HUD_PRINTCENTER, "Sprinting is (supposed to be) disabled")
 
             return true
         end
