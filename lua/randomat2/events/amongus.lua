@@ -56,22 +56,31 @@ CreateConVar("randomat_amongus_auto_trigger", 1, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, 
 CreateConVar("randomat_amongus_task_threshhold", 60, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Seconds until tasks/guns aren't found too quickly", 0, 120)
 
 --Initial tables and variables needed at some point
-playerModels = {}
-playerColors = {}
-remainingColors = {}
-amongusPlayersVoted = {}
-aliveplys = {}
-corpses = {}
-numvoted = 0
-wepspawns = 0
-amongUsFoundWeaponCount = 0
-amongUsMeeting = false
-amongUsRoundOver = true
-amongUsRemoveHurt = false
-emergencyButtonTriggerCount = 0
+local playerModels = {}
+local playerColors = {}
+local remainingColors = {}
+local amongusPlayersVoted = {}
+local aliveplys = {}
+local corpses = {}
+local numvoted = 0
+local wepspawns = 0
+local amongUsFoundWeaponCount = 0
+local amongUsMeeting = false
+local amongUsRoundOver = true
+local amongUsRemoveHurt = false
+local emergencyButtonTriggerCount = 0
+local playervotes
+local votableplayers
+local repeater
+local repeaterDiscussion
+local numaliveplayers
+local amongUsMeetingTimeLeft
+local AmongUsVotingtimer
+local AmongUsDiscussiontimer
+local amongUsEmergencyMeeting
 
 --The RGB values for each Among Us player colour as per the Among Us Wiki
-auColors = {
+local auColors = {
     Red = Color(197, 17, 17),
     Blue = Color(19, 46, 209),
     Green = Color(17, 127, 45),
@@ -255,10 +264,10 @@ function AmongUsVoteEnd()
     --If the threshold of votes has been reached...
     if votenumber >= #aliveplys * (GetConVar("randomat_amongus_votepct"):GetInt() / 100) and votenumber ~= 0 then
         --Selects whoever got the most votes to be ejected
-        slainply = table.GetWinningKey(playervotes)
-        winingvotes = playervotes[slainply]
+        local slainply = table.GetWinningKey(playervotes)
+        local winingvotes = playervotes[slainply]
         --Check if there are multiple people with the most votes
-        winingplys = table.KeysFromValue(playervotes, winingvotes)
+        local winingplys = table.KeysFromValue(playervotes, winingvotes)
 
         --If there is a tie, kill no-one
         if #winingplys > 1 then
@@ -403,7 +412,6 @@ function EVENT:Begin()
     SetGlobalBool("AmongUsGunWinRemove", false)
     SetGlobalBool("AmongUsTasksTooFast", false)
     wepspawns = 0
-    DelayedTraitorVictory = false
     emergencyButtonTriggerCount = 0
     AmongUsConVarResync()
 
@@ -472,7 +480,7 @@ function EVENT:Begin()
 
     --Setting everyone to either a traitor or innocent, traitors get their 'traitor kill knife'
     for i, ply in pairs(player.GetAll()) do
-        if ((ply:GetRole() == ROLE_ASSASSIN) or (ply:GetRole() == ROLE_HYPNOTIST) or (ply:GetRole() == ROLE_VAMPIRE) or (ply:GetRole() == ROLE_TRAITOR)) and (traitorCount < traitorCap) then
+        if Randomat:IsTraitorTeam(ply) and (traitorCount < traitorCap) then
             Randomat:SetRole(ply, ROLE_TRAITOR)
             traitorCount = traitorCount + 1
 
