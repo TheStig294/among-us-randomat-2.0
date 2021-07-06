@@ -14,7 +14,7 @@ local firstEmergencyMeetingBindMessage = true
 local meeting = false
 local foundweps = 0
 local livefoundweps = 0
-amongUsEmergencyMeetings = 0
+local amongUsEmergencyMeetings = 0
 
 --Plays the impostor kill 'squlech' sound on demand
 net.Receive("AmongUsSqulech", function()
