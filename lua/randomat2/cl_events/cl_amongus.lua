@@ -85,7 +85,7 @@ net.Receive("AmongUsInitialHooks", function()
 
             return true
         elseif (string.find(bind, "+speed")) then
-            ply:PrintMessage(HUD_PRINTCENTER, "Sprinting is (supposed to be) disabled")
+            ply:PrintMessage(HUD_PRINTCENTER, "Sprinting is disabled")
 
             return true
         end

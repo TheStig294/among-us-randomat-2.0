@@ -69,6 +69,7 @@ local amongUsMeeting = false
 local amongUsRoundOver = true
 local amongUsRemoveHurt = false
 local emergencyButtonTriggerCount = 0
+local amongUsSprntingWasOn = false
 local playervotes
 local votableplayers
 local repeater
@@ -469,8 +470,15 @@ function EVENT:Begin()
         end
     end
 
-    --Disabling sprint if it exists
+    --Disabling sprint if it exists in Noxx's Custom Roles
     hook.Remove("Think", "TTTSprintThink")
+
+    --Disabling sprint if it's on in other sprint-adding mods
+    if ConVarExists("ttt_sprint_enabled") then
+        amongUsSprntingWasOn = GetConVar("ttt_sprint_enabled"):GetBool()
+        GetConVar("ttt_sprint_enabled"):SetBool(false)
+    end
+
     --Thanks Desmos + Among Us wiki, this number of traitors ensures games do not instantly end with a double kill
     traitorCap = math.floor((player.GetCount() / 2) - 1.5)
 
@@ -1032,6 +1040,11 @@ function EVENT:End()
         --Turning blood back on
         for i, ply in pairs(player.GetAll()) do
             ply:SetBloodColor(BLOOD_COLOR_RED)
+        end
+
+        --Resetting the sprint convar to on, if it was on before the randomat
+        if amongUsSprntingWasOn then
+            GetConVar("ttt_sprint_enabled"):SetBool(true)
         end
 
         -- loop through all players
