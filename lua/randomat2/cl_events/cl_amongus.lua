@@ -53,10 +53,11 @@ net.Receive("AmongUsInitialHooks", function()
     --Stopping the TTT role hint box from covering the among us intro images
     amongUsStartPopupDuration = GetConVar("ttt_startpopup_duration"):GetInt()
     RunConsoleCommand("ttt_startpopup_duration", "0")
-    --Displays a message if the sprint key is pressed and handles a player pressing the emergency meeting button 
     amongUsEmergencyMeetings = GetGlobalInt("randomat_amongus_emergency_meetings")
     local firstPress = true
 
+    -- Displays a message if the sprint key is pressed while sprinting is disabled 
+    -- Handles a player pressing the emergency meeting button 
     hook.Add("PlayerBindPress", "AmongUsRandomatBuyMenuDisable", function(ply, bind, pressed)
         if (string.find(bind, "+menu_context")) then
             if game.GetMap() == "ttt_amongusskeld" and firstPress then
@@ -77,6 +78,7 @@ net.Receive("AmongUsInitialHooks", function()
                 net.SendToServer()
             end
 
+            -- Preventing any print messages from appearing twice when calling for an emergency meeting
             if firstPress then
                 firstPress = false
             else
@@ -84,12 +86,18 @@ net.Receive("AmongUsInitialHooks", function()
             end
 
             return true
-        elseif (string.find(bind, "+speed")) then
+        elseif string.find(bind, "+speed") and GetGlobalBool("randomat_amongus_sprinting") == false then
             ply:PrintMessage(HUD_PRINTCENTER, "Sprinting is disabled")
 
             return true
         end
     end)
+
+    -- Disabling Sprinting if the convar is enabled
+    if GetGlobalBool("randomat_amongus_sprinting") == false then
+        hook.Remove("Think", "TTTSprintThink")
+        hook.Remove("Think", "TTTSprint4Think")
+    end
 
     --Limits the player's view distance like in among us, traitors and innocents can have differing view distances (in among us, impostors typically can see further than crewmates)
     hook.Add("SetupWorldFog", "AmongUsWorldFog", function()

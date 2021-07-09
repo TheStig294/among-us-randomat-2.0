@@ -55,6 +55,8 @@ CreateConVar("randomat_amongus_auto_trigger", 1, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, 
 
 CreateConVar("randomat_amongus_task_threshhold", 60, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Seconds until tasks/guns aren't found too quickly", 0, 120)
 
+CreateConVar("randomat_amongus_sprinting", 0, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Enable sprinting during the randomat", 0, 1)
+
 --Initial tables and variables needed at some point
 local playerModels = {}
 local playerColors = {}
@@ -69,7 +71,6 @@ local amongUsMeeting = false
 local amongUsRoundOver = true
 local amongUsRemoveHurt = false
 local emergencyButtonTriggerCount = 0
-local amongUsSprntingWasOn = false
 local playervotes
 local votableplayers
 local repeater
@@ -400,6 +401,7 @@ local function AmongUsConVarResync()
     SetGlobalBool("randomat_amongus_taskbar_update", GetConVar("randomat_amongus_taskbar_update"):GetBool())
     SetGlobalBool("randomat_amongus_auto_trigger", GetConVar("randomat_amongus_auto_trigger"):GetBool())
     SetGlobalInt("randomat_amongus_task_threshhold", GetConVar("randomat_amongus_task_threshhold"):GetInt())
+    SetGlobalBool("randomat_amongus_sprinting", GetConVar("randomat_amongus_sprinting"):GetBool())
 end
 
 function EVENT:Begin()
@@ -468,15 +470,6 @@ function EVENT:Begin()
             v:Kill()
             v:ChatPrint("Your Steam nickname is incompatible with this randomat.")
         end
-    end
-
-    --Disabling sprint if it exists in Noxx's Custom Roles
-    hook.Remove("Think", "TTTSprintThink")
-
-    --Disabling sprint if it's on in other sprint-adding mods
-    if ConVarExists("ttt_sprint_enabled") then
-        amongUsSprntingWasOn = GetConVar("ttt_sprint_enabled"):GetBool()
-        GetConVar("ttt_sprint_enabled"):SetBool(false)
     end
 
     --Thanks Desmos + Among Us wiki, this number of traitors ensures games do not instantly end with a double kill
@@ -1042,11 +1035,6 @@ function EVENT:End()
             ply:SetBloodColor(BLOOD_COLOR_RED)
         end
 
-        --Resetting the sprint convar to on, if it was on before the randomat
-        if amongUsSprntingWasOn then
-            GetConVar("ttt_sprint_enabled"):SetBool(true)
-        end
-
         -- loop through all players
         for i, ply in pairs(player.GetAll()) do
             -- if the index k in the table playermodels has a model, then...
@@ -1121,7 +1109,7 @@ function EVENT:GetConVars()
 
     local checks = {}
 
-    for _, v in pairs({"freeze", "confirm_ejects", "anonymous_voting", "taskbar_update", "auto_trigger"}) do
+    for _, v in pairs({"freeze", "confirm_ejects", "anonymous_voting", "taskbar_update", "auto_trigger", "sprinting"}) do
         local name = "randomat_" .. self.id .. "_" .. v
 
         if ConVarExists(name) then
