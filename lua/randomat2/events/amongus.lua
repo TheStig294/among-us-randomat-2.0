@@ -670,11 +670,13 @@ function EVENT:Begin()
         --Freezing the round timer as the innocent task now serves this purpose (freeze to 4:20 cause Ynaut)
         if GetGlobalBool("AmongUsGunWinRemove") == false then
             SetGlobalFloat("ttt_round_end", CurTime() + 261)
+            SetGlobalFloat("ttt_haste_end", CurTime() + 261)
         end
 
         --Stopping the TTT round timer during a meeting
         if amongUsMeeting then
             SetGlobalFloat("ttt_round_end", CurTime() + amongUsMeetingTimeLeft)
+            SetGlobalFloat("ttt_haste_end", CurTime() + amongUsMeetingTimeLeft)
         end
 
         --Remove any trigger_hurt map entities which could kill a player while frozen mid-vote
