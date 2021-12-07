@@ -239,7 +239,7 @@ function AmongUsVoteEnd()
     timer.Simple(1, function()
         if not amongUsRoundOver then
             for k, v in pairs(player.GetAll()) do
-                v:EmitSound(Sound("amongus/votetext.wav"))
+                v:EmitSound(Sound("amongus/votetext.mp3"))
             end
 
             net.Start("AmongUsForceSound")
@@ -734,7 +734,7 @@ function EVENT:Begin()
     self:AddHook("TTTEndRound", function(result)
         if result == WIN_TRAITOR then
             for k, v in pairs(player.GetAll()) do
-                v:EmitSound(Sound("amongus/impostorwin.wav"))
+                v:EmitSound(Sound("amongus/impostorwin.mp3"))
             end
 
             net.Start("AmongUsForceSound")
@@ -742,7 +742,7 @@ function EVENT:Begin()
             net.Broadcast()
         else
             for k, v in pairs(player.GetAll()) do
-                v:EmitSound(Sound("amongus/crewmatewin.wav"))
+                v:EmitSound(Sound("amongus/crewmatewin.mp3"))
             end
 
             net.Start("AmongUsForceSound")
@@ -815,7 +815,7 @@ function EVENT:Begin()
                     if GetGlobalBool("AmongUsGunWinRemove") then
                         return false
                     else
-                        sounddata.SoundName = "amongus/taskcomplete.wav"
+                        sounddata.SoundName = "amongus/taskcomplete.mp3"
 
                         return true
                     end
@@ -961,7 +961,7 @@ net.Receive("AmongUsPlayerVoted", function(ln, ply)
     --Play the vote sound to all players, if they are not trying to vote multiple times
     if voterepeatblock == 0 then
         for k, v in pairs(player.GetAll()) do
-            v:EmitSound(Sound("amongus/vote.wav"))
+            v:EmitSound(Sound("amongus/vote.mp3"))
         end
 
         net.Start("AmongUsForceSound")

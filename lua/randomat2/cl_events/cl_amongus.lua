@@ -18,7 +18,7 @@ local amongUsEmergencyMeetings = 0
 
 --Plays the impostor kill 'squlech' sound on demand
 net.Receive("AmongUsSqulech", function()
-    LocalPlayer():EmitSound(Sound("amongus/squlech.wav"))
+    LocalPlayer():EmitSound(Sound("amongus/squlech.mp3"))
 end)
 
 --A pop-up message reminder to players that still have emergency meetings left
@@ -304,7 +304,7 @@ net.Receive("AmongUsShhhhhhhPopup", function()
 
     timer.Simple(4, function()
         amongusshhhhhhhpopup:Close()
-        LocalPlayer():EmitSound(Sound("amongus/roundbegin.wav"))
+        LocalPlayer():EmitSound(Sound("amongus/roundbegin.mp3"))
 
         --If there are more than 3 traitors, a generic intro popup is shown (where the number of traitors among us isn't mentioned)
         if traitorCount < 4 then
@@ -387,7 +387,7 @@ end)
 
 --The popup that is shown when a player is killed by an impostor
 net.Receive("AmongUsVictimPopup", function()
-    LocalPlayer():EmitSound(Sound("amongus/victimkill.wav"))
+    LocalPlayer():EmitSound(Sound("amongus/victimkill.mp3"))
     amongusvictimpopup = vgui.Create("DFrame")
     local xSize = ScrW()
     local ySize = ScrH()
@@ -410,7 +410,7 @@ end)
 
 --The "Body Reported!" popup
 net.Receive("AmongUsBodyReportedPopup", function()
-    LocalPlayer():EmitSound(Sound("amongus/bodyreported.wav"))
+    LocalPlayer():EmitSound(Sound("amongus/bodyreported.mp3"))
     amongusbodyreportedpopup = vgui.Create("DFrame")
     local xSize = ScrW()
     local ySize = ScrH()
@@ -433,7 +433,7 @@ end)
 
 --The emergency meeting popup
 net.Receive("AmongUsEmergencyMeetingPopup", function()
-    LocalPlayer():EmitSound(Sound("amongus/emergencymeeting.wav"))
+    LocalPlayer():EmitSound(Sound("amongus/emergencymeeting.mp3"))
     amongusemergencymeetingpopup = vgui.Create("DFrame")
     local xSize = ScrW()
     local ySize = ScrH()
@@ -459,15 +459,15 @@ net.Receive("AmongUsForceSound", function()
     local sound = net.ReadString()
 
     if sound == "emergency" then
-        LocalPlayer():EmitSound(Sound("amongus/emergencymeeting.wav"))
+        LocalPlayer():EmitSound(Sound("amongus/emergencymeeting.mp3"))
     elseif sound == "traitorwin" then
-        LocalPlayer():EmitSound(Sound("amongus/impostorwin.wav"))
+        LocalPlayer():EmitSound(Sound("amongus/impostorwin.mp3"))
     elseif sound == "innocentwin" then
-        LocalPlayer():EmitSound(Sound("amongus/crewmatewin.wav"))
+        LocalPlayer():EmitSound(Sound("amongus/crewmatewin.mp3"))
     elseif sound == "vote" then
-        LocalPlayer():EmitSound(Sound("amongus/vote.wav"))
+        LocalPlayer():EmitSound(Sound("amongus/vote.mp3"))
     elseif sound == "votetext" then
-        LocalPlayer():EmitSound(Sound("amongus/votetext.wav"))
+        LocalPlayer():EmitSound(Sound("amongus/votetext.mp3"))
     end
 end)
 
