@@ -931,8 +931,8 @@ net.Receive("AmongUsEmergencyMeeting", function(ln, ply)
 
     timer.Create("AmongUsEmergencyMeetingTimer", 1, GetConVar("randomat_amongus_emergency_delay"):GetInt(), function()
         if timer.RepsLeft("AmongUsEmergencyMeetingTimer") == 0 then
-            --If the player has died since the emergency meeting was called or a meeting is already ongoing, no emergency meeting happens
-            if ply:Alive() and amongUsMeeting == false then
+            --If the player has died since the emergency meeting was called, a meeting is already ongoing, or the round is over, no emergency meeting happens
+            if ply:Alive() and amongUsMeeting == false and amongUsRoundOver == false then
                 amongUsEmergencyMeeting = true
                 AmongUsVote(ply:Nick())
             elseif not ply:Alive() then
