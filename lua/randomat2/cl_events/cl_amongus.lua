@@ -238,18 +238,12 @@ net.Receive("AmongUsEventBegin", function()
         local votee = net.ReadString()
         local num = net.ReadInt(32)
 
-        if num ~= 0 then
+        if IsValid(lst) and num ~= 0 then
             for k, v in pairs(lst:GetLines()) do
                 if v:GetColumnText(1) == votee then
                     v:SetColumnText(2, num)
                 end
             end
-        end
-    end)
-
-    net.Receive("AmongUsReset", function()
-        for k, v in pairs(lst:GetLines()) do
-            v:SetColumnText(2, 0)
         end
     end)
 end)
