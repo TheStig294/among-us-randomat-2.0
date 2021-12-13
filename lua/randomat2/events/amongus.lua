@@ -530,7 +530,7 @@ function EVENT:Begin()
             end
 
             -- we need to wait a second for cl_playermodel_selector_force to take effect (and THEN change model to the Among Us model)
-            timer.Simple(0.1, function()
+            timer.Simple(3, function()
                 -- Set player number i (in the table) to their respective model, to be restored at the end of the round
                 playerModels[i] = ply:GetModel()
                 playerColors[i] = ply:GetPlayerColor()
