@@ -4,6 +4,8 @@ EVENT.Title = ""
 EVENT.id = "amongus"
 --Giving an AltTitle to be identifiable in the ULX menu
 EVENT.AltTitle = "Among Us"
+--Preventing this randomat from running at the same time as another that involves voting, and preventing any future randomats that involve voting from triggering
+EVENT.Type = EVENT_TYPE_VOTING
 --A lot of stuff goes between the client and server in this randomat...
 util.AddNetworkString("AmongUsEventBegin")
 util.AddNetworkString("AmongUsEventEnd")
