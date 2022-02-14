@@ -60,7 +60,6 @@ CreateConVar("randomat_amongus_task_threshhold", 60, {FCVAR_ARCHIVE, FCVAR_NOTIF
 CreateConVar("randomat_amongus_sprinting", 0, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Enable sprinting during the randomat", 0, 1)
 
 --Initial tables and variables needed at some point
-local playerModels = {}
 local playerColors = {}
 local remainingColors = {}
 local amongusPlayersVoted = {}
@@ -521,46 +520,31 @@ function EVENT:Begin()
     remainingColors = {}
     table.Add(remainingColors, auColors)
 
-    -- Gets all players...
-    for i, ply in pairs(player.GetAll()) do
-        -- if they're alive and not in spectator mode
-        if ply:Alive() and not ply:IsSpec() then
-            -- and not a bot (bots do not have the following command, so it's unnecessary)
-            if (not ply:IsBot()) then
-                -- We need to disable cl_playermodel_selector_force, because it messes with SetModel, we'll reset it when the event ends
-                ply:ConCommand("cl_playermodel_selector_force 0")
+    -- Sets all living players to an among us playermodel
+    for i, ply in pairs(self:GetAlivePlayers()) do
+        -- Wait a few seconds for the among us popup to come on screen so we can hide the changing of everyone's playermodels
+        timer.Simple(3, function()
+            -- Save a player's model colour, to be restored at the end of the round
+            playerColors[ply] = ply:GetPlayerColor()
+            -- Sets their model to the Among Us model
+            -- Sets everyone's view height to be lower as the among us playermodel is shorter than a standard playermodel
+            ForceSetPlayermodel(ply, "models/amongus/player/player.mdl", Vector(0, 0, 48), Vector(0, 0, 28))
+
+            -- Resets the choosable colours for everyone's Among Us playermodel if none are left (happens when there are more than 12 players, as there are 12 colours to choose from)
+            if remainingColors == {} then
+                table.Add(remainingColors, auColors)
             end
 
-            -- we need to wait a second for cl_playermodel_selector_force to take effect (and THEN change model to the Among Us model)
-            timer.Simple(3, function()
-                -- Set player number i (in the table) to their respective model, to be restored at the end of the round
-                playerModels[i] = ply:GetModel()
-                playerColors[i] = ply:GetPlayerColor()
-                -- Sets their model to the Among Us model
-                ply:SetModel("models/amongus/player/player.mdl")
-
-                -- Resets the choosable colours for everyone's Among Us playermodel if none are left (happens when there are more than 12 players, as there are 12 colours to choose from)
-                if remainingColors == {} then
-                    table.Add(remainingColors, auColors)
-                end
-
-                --Chooses a random colour, prevents it from being chosen by anyone else, and sets the player to that colour
-                local randomColor = table.Random(remainingColors)
-                table.RemoveByValue(remainingColors, randomColor)
-                ply:SetPlayerColor(randomColor:ToVector())
-                ply:SetNWString("AmongUsColor", table.KeyFromValue(auColors, randomColor))
-                --Makes players able to walk through each other
-                ply:SetCollisionGroup(COLLISION_GROUP_PASSABLE_DOOR)
-                --Sets a bool to check if a player has pressed the emergency meeting button
-                ply:SetNWBool("AmongUsPressedEmergencyButton", false)
-
-                --Sets everyone's view height to be lower as the among us playermodel is shorter than a standard playermodel
-                timer.Simple(1, function()
-                    ply:SetViewOffset(Vector(0, 0, 48))
-                    ply:SetViewOffsetDucked(Vector(0, 0, 28))
-                end)
-            end)
-        end
+            --Chooses a random colour, prevents it from being chosen by anyone else, and sets the player to that colour
+            local randomColor = table.Random(remainingColors)
+            table.RemoveByValue(remainingColors, randomColor)
+            ply:SetPlayerColor(randomColor:ToVector())
+            ply:SetNWString("AmongUsColor", table.KeyFromValue(auColors, randomColor))
+            --Makes players able to walk through each other
+            ply:SetCollisionGroup(COLLISION_GROUP_PASSABLE_DOOR)
+            --Sets a bool to check if a player has pressed the emergency meeting button
+            ply:SetNWBool("AmongUsPressedEmergencyButton", false)
+        end)
     end
 
     --If someone kills someone else as a traitor, they receive another knife after a cooldown (as set by the cooldown length convar)
@@ -1034,30 +1018,18 @@ function EVENT:End()
         amongUsRoundOver = true
         amongUsRemoveHurt = false
 
-        --Turning blood back on
+        -- Resetting player propterites
         for i, ply in pairs(player.GetAll()) do
-            ply:SetBloodColor(BLOOD_COLOR_RED)
-        end
-
-        -- loop through all players
-        for i, ply in pairs(player.GetAll()) do
-            -- if the index k in the table playermodels has a model, then...
-            if (playerModels[i] ~= nil) then
-                -- we set the player v to the playermodel with index i in the table
-                -- this should invoke the viewheight script from the models and fix viewoffsets (e.g. Zoey's model) 
-                -- this does however first reset their viewmodel in the preparing phase (when they respawn)
-                -- might be glitchy with pointshop items that allow you to get a viewoffset
-                ply:SetModel(playerModels[i])
-                ply:SetPlayerColor(playerColors[i])
+            if playerColors[ply] ~= nil then
+                ply:SetPlayerColor(playerColors[ply])
             end
 
             -- we reset the cl_playermodel_selector_force to 1, otherwise TTT will reset their playermodels on a new round start (to default models!)
-            ply:ConCommand("cl_playermodel_selector_force 1")
+            ply:SetBloodColor(BLOOD_COLOR_RED)
             ply:SetCollisionGroup(COLLISION_GROUP_PLAYER)
-            -- clear the model table to avoid setting wrong models (e.g. disconnected players)
-            table.Empty(playerModels)
         end
 
+        ForceResetAllPlayermodels()
         --Removing all the fancy functions we used now that the randomat is over
         hook.Remove("TTTBodyFound", "AmongUsEventBegin")
         timer.Remove("votekilltimerAmongUs")
