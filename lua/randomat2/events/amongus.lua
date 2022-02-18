@@ -350,6 +350,11 @@ function EVENT:Begin()
             ply:Freeze(false)
             net.Start("AmongUsEmergencyMeetingBind")
             net.Send(ply)
+
+            -- Fail-safe to hopefully prevent screen staying black
+            timer.Simple(3, function()
+                ply:ScreenFade(SCREENFADE.PURGE, Color(0, 0, 0, 200), 0, 0)
+            end)
         end)
     end
 
