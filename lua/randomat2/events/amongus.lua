@@ -287,12 +287,38 @@ function EVENT:Begin()
     -- Adding the colour table to a different table so if more than 12 people are playing, the choosable colours are able to be reset
     local remainingColors = {}
     table.Add(remainingColors, auColors)
+    -- Thanks Desmos + Among Us wiki, this number of traitors ensures games do not instantly end with a double kill
+    traitorCap = math.floor((player.GetCount() / 2) - 1.5)
 
-    for _, ply in pairs(self:GetAlivePlayers()) do
+    if traitorCap <= 0 then
+        traitorCap = 1
+    end
+
+    for _, ply in pairs(player.GetAll()) do
         -- Kill any players trying to exploit the skip vote button to avoid any weird behaviour
         if ply:Nick() == "[Skip Vote]" then
             ply:Kill()
             ply:ChatPrint("Your Steam nickname is incompatible with this randomat.")
+        end
+
+        -- Fades out the screen, freezes players and shows the among us intro pop-ups
+        ply:ScreenFade(SCREENFADE.OUT, Color(0, 0, 0, 255), 1, 2)
+        ply:Freeze(true)
+        -- Turning off blood so traitors are not so easily incriminated
+        ply:SetBloodColor(DONT_BLEED)
+
+        -- Setting everyone to either a traitor or innocent, traitors get their 'traitor kill knife'
+        if Randomat:IsTraitorTeam(ply) and (traitorCount < traitorCap) then
+            Randomat:SetRole(ply, ROLE_TRAITOR)
+            traitorCount = traitorCount + 1
+
+            timer.Simple(5, function()
+                ply:Give("weapon_ttt_impostor_knife_randomat")
+                ply:SelectWeapon("weapon_ttt_impostor_knife_randomat")
+                ply:ChatPrint("No-one can see you holding the knife")
+            end)
+        else
+            Randomat:SetRole(ply, ROLE_INNOCENT)
         end
 
         -- Sets all living players to an among us playermodel
@@ -319,35 +345,6 @@ function EVENT:Begin()
             -- Sets a bool to check if a player has pressed the emergency meeting button
             ply:SetNWBool("AmongUsPressedEmergencyButton", false)
         end)
-    end
-
-    -- Thanks Desmos + Among Us wiki, this number of traitors ensures games do not instantly end with a double kill
-    traitorCap = math.floor((player.GetCount() / 2) - 1.5)
-
-    if traitorCap <= 0 then
-        traitorCap = 1
-    end
-
-    for _, ply in pairs(player.GetAll()) do
-        -- Fades out the screen, freezes players and shows the among us intro pop-ups
-        ply:ScreenFade(SCREENFADE.OUT, Color(0, 0, 0, 255), 1, 2)
-        ply:Freeze(true)
-        -- Turning off blood so traitors are not so easily incriminated
-        ply:SetBloodColor(DONT_BLEED)
-
-        -- Setting everyone to either a traitor or innocent, traitors get their 'traitor kill knife'
-        if Randomat:IsTraitorTeam(ply) and (traitorCount < traitorCap) then
-            Randomat:SetRole(ply, ROLE_TRAITOR)
-            traitorCount = traitorCount + 1
-
-            timer.Simple(5, function()
-                ply:Give("weapon_ttt_impostor_knife_randomat")
-                ply:SelectWeapon("weapon_ttt_impostor_knife_randomat")
-                ply:ChatPrint("No-one can see you holding the knife")
-            end)
-        else
-            Randomat:SetRole(ply, ROLE_INNOCENT)
-        end
 
         -- Reminding everyone they can press the buy menu button to call an emergency meeting
         timer.Simple(9, function()
