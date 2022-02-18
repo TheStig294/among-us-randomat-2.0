@@ -268,9 +268,9 @@ function EVENT:Begin()
         -- Taking away a quarter of guns to find so players don't have to find ALL of them
         wepspawns = wepspawns * 3 / 4
 
-        -- Artificially adding to the guns found counter if a gun hasn't been found in the last 10 seconds to prevent guns that are out of bounds preventing a win to ensure the game is on a timer
+        -- Artificially adding to the guns found counter if a gun hasn't been found in the last 15 seconds to prevent guns that are out of bounds preventing a win to ensure the game is on a timer
         -- The guns are added after a random amount of extra seconds
-        timer.Create("AmongUsTotalWeaponDecrease", 10, 0, function()
+        timer.Create("AmongUsTotalWeaponDecrease", 15, 0, function()
             timer.Simple(math.random(1, 10), function()
                 if not (roundOver or meetingActive) then
                     weaponsFound = weaponsFound + math.Round(wepspawns * 1 / 30)
