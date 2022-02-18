@@ -294,7 +294,7 @@ function EVENT:Begin()
         traitorCap = 1
     end
 
-    for _, ply in pairs(player.GetAll()) do
+    for _, ply in pairs(self:GetPlayers(true)) do
         -- Fades out the screen, freezes players and shows the among us intro pop-ups
         ply:ScreenFade(SCREENFADE.OUT, Color(0, 0, 0, 255), 1, 2)
         ply:Freeze(true)
