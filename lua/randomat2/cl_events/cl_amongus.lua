@@ -159,7 +159,6 @@ net.Receive("AmongUsEventBegin", function()
                 foundweps = livefoundweps
             end
 
-            local pl = LocalPlayer()
             local text
 
             -- If on ttt_amongusskeld, say "Tasks done" rather than "Guns to win" to reflect on this map there are actual tasks to do 
@@ -224,7 +223,7 @@ net.Receive("AmongUsVoteBegin", function()
     votingList:AddLine("[Skip Vote]", 0)
 
     -- When a player clicks to vote for someone
-    votingList.OnRowSelected = function(votingList, index, pnl)
+    votingList.OnRowSelected = function(_, index, pnl)
         if LocalPlayer():Alive() and not LocalPlayer():IsSpec() then
             net.Start("AmongUsPlayerVoted")
             net.WriteString(pnl:GetColumnText(1))
