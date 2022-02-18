@@ -477,6 +477,13 @@ function EVENT:Begin()
                 PrintMessage(HUD_PRINTTALK, "Guns were found too easily, win by voting out all traitors!")
                 timer.Remove("AmongUsTotalWeaponDecrease")
             else
+                -- Play the Among Us crewmate/impostor win music at the end of the round
+                timer.Simple(0.5, function()
+                    net.Start("AmongUsForceSound")
+                    net.WriteString("innocentwin")
+                    net.Broadcast()
+                end)
+
                 return WIN_INNOCENT
             end
             -- If on Among Us map, win when all tasks are complete, comms aren't down and tasks weren't completed too quickly
@@ -486,36 +493,33 @@ function EVENT:Begin()
                 PrintMessage(HUD_PRINTCENTER, "Tasks finished too easily!")
                 PrintMessage(HUD_PRINTTALK, "Tasks were finished too easily, win by voting out all traitors!")
             else
+                timer.Simple(0.5, function()
+                    net.Start("AmongUsForceSound")
+                    net.WriteString("innocentwin")
+                    net.Broadcast()
+                end)
+
                 return WIN_INNOCENT
             end
         elseif numAliveInnocents <= numAliveTraitors then
             -- If there are as many traitors as innocents, traitors win
+            timer.Simple(0.5, function()
+                net.Start("AmongUsForceSound")
+                net.WriteString("traitorwin")
+                net.Broadcast()
+            end)
+
             return WIN_TRAITOR
         elseif numAliveTraitors == 0 then
+            timer.Simple(0.5, function()
+                net.Start("AmongUsForceSound")
+                net.WriteString("innocentwin")
+                net.Broadcast()
+            end)
+
             return WIN_INNOCENT
         elseif amongUsMap then
             return WIN_NONE
-        end
-    end)
-
-    -- Play the Among Us victory music at the end of the round
-    self:AddHook("TTTEndRound", function(result)
-        if result == WIN_TRAITOR then
-            for _, ply in pairs(player.GetAll()) do
-                ply:EmitSound(Sound("amongus/impostorwin.mp3"))
-            end
-
-            net.Start("AmongUsForceSound")
-            net.WriteString("traitorwin")
-            net.Broadcast()
-        else
-            for _, ply in pairs(player.GetAll()) do
-                ply:EmitSound(Sound("amongus/crewmatewin.mp3"))
-            end
-
-            net.Start("AmongUsForceSound")
-            net.WriteString("innocentwin")
-            net.Broadcast()
         end
     end)
 
