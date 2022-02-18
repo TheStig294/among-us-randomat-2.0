@@ -992,14 +992,27 @@ function EVENT:End()
             -- we reset the cl_playermodel_selector_force to 1, otherwise TTT will reset their playermodels on a new round start (to default models!)
             ply:SetBloodColor(BLOOD_COLOR_RED)
             ply:SetCollisionGroup(COLLISION_GROUP_PLAYER)
+
+            if GetConVar("randomat_amongus_freeze"):GetBool() then
+                ply:Freeze(false)
+                ply:SetMoveType(MOVETYPE_WALK)
+                ply:GodDisable()
+                ply:ScreenFade(SCREENFADE.PURGE, Color(0, 0, 0, 200), 0, 0)
+            end
+
+            timer.Remove("AmongUsRandomatKnifeTimer" .. ply:SteamID64())
         end
 
+        RunConsoleCommand("phys_timescale", "1")
+        RunConsoleCommand("ragdoll_sleepaftertime", "1")
         ForceResetAllPlayermodels()
         timer.Remove("votekilltimerAmongUs")
-        timer.Remove("AmongUsRandomatKnifeTimer")
+        timer.Remove("AmongUsDiscussionTimer")
         timer.Remove("AmongUsInnocentTask")
         timer.Remove("AmongUsTotalWeaponDecrease")
         timer.Remove("AmongUsPlayTimer")
+        timer.Remove("AmongUsEmergencyMeetingTimer")
+        timer.Remove("AmongUsTotalWeaponDecrease")
         -- Close the vote window if it is open
         net.Start("AmongUsVoteEnd")
         net.Broadcast()
