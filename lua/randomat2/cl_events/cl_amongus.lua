@@ -14,6 +14,7 @@ local meeting = false
 local foundweps = 0
 local livefoundweps = 0
 local emergencyMeetingsLeft = 0
+local amongUsMap = game.GetMap() == "ttt_amongusskeld"
 
 -- Plays the impostor kill 'squlech' sound on demand
 net.Receive("AmongUsSqulech", function()
@@ -24,7 +25,7 @@ end)
 net.Receive("AmongUsEmergencyMeetingBind", function()
     local ply = LocalPlayer()
 
-    if emergencyMeetingsLeft > 0 and game.GetMap() ~= "ttt_amongusskeld" and ply:Alive() and not ply:IsSpec() then
+    if emergencyMeetingsLeft > 0 and not amongUsMap and ply:Alive() and not ply:IsSpec() then
         LocalPlayer():ChatPrint("Press '" .. string.upper(contextBinding) .. "' to call an emergency meeting")
 
         if not firstEmergencyMeetingBindMessage then
@@ -61,7 +62,7 @@ net.Receive("AmongUsEventBegin", function()
     -- Handles a player pressing the emergency meeting button 
     hook.Add("PlayerBindPress", "AmongUsRandomatBuyMenuDisable", function(ply, bind, pressed)
         if (string.find(bind, "+menu_context")) then
-            if game.GetMap() == "ttt_amongusskeld" and firstPress then
+            if amongUsMap and firstPress then
                 ply:PrintMessage(HUD_PRINTTALK, "To call an emergency meeting, find the emergency meeting button")
             elseif ply:Alive() == false and firstPress then
                 ply:PrintMessage(HUD_PRINTTALK, "Dead people can't call emergency meetings")
@@ -145,7 +146,7 @@ net.Receive("AmongUsEventBegin", function()
 
     -- Adds the taskbar after the among us intro popups are done
     timer.Simple(11, function()
-        if GetGlobalBool("AmongUsTaskDisable") then
+        if amongUsMap then
             timer.Simple(2, function()
                 -- Adds an on-screen message to players telling them how to complete tasks on the special among us map: ttt_amongusskeld
                 LocalPlayer():PrintMessage(HUD_PRINTCENTER, "Press '" .. string.upper(useBinding) .. "' on the orange lights to complete tasks!")
@@ -162,7 +163,7 @@ net.Receive("AmongUsEventBegin", function()
             local text
 
             -- If on ttt_amongusskeld, say "Tasks done" rather than "Guns to win" to reflect on this map there are actual tasks to do 
-            if GetGlobalBool("AmongUsTaskDisable") then
+            if amongUsMap then
                 text = string.format("%i / %02i", foundweps, totalwepcount) .. " Tasks Done"
             else
                 text = string.format("%i / %02i", foundweps, totalwepcount) .. " Guns To Win"
