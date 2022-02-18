@@ -8,9 +8,9 @@ EVENT.AltTitle = "Among Us"
 EVENT.Type = EVENT_TYPE_VOTING
 
 -- Most of the usual Among Us options, plus more! (change these in the console or via the randomat ULX mod)
-CreateConVar("randomat_amongus_voting_timer", 30, {FCVAR_NOTIFY, FCVAR_ARCHIVE}, "Length of voting time in seconds", 0, 300)
+CreateConVar("randomat_amongus_voting_timer", 30, {FCVAR_NOTIFY, FCVAR_ARCHIVE}, "Seconds voting time lasts", 0, 300)
 
-CreateConVar("randomat_amongus_discussion_timer", 15, {FCVAR_NOTIFY, FCVAR_ARCHIVE}, "Length of vote discussion time in seconds", 0, 120)
+CreateConVar("randomat_amongus_discussion_timer", 15, {FCVAR_NOTIFY, FCVAR_ARCHIVE}, "Seconds discussion time lasts, set to 0 to disable", 0, 120)
 
 CreateConVar("randomat_amongus_votepct", 0, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Vote percentage required to eject", 0, 100)
 
@@ -40,6 +40,8 @@ CreateConVar("randomat_amongus_task_threshhold", 60, {FCVAR_ARCHIVE, FCVAR_NOTIF
 
 CreateConVar("randomat_amongus_sprinting", 0, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Enable sprinting during the randomat", 0, 1)
 
+CreateConVar("randomat_amongus_music", 1, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Play the Among Us drip music", 0, 1)
+
 -- Variables needed across multiple functions
 local amongUsMap = game.GetMap() == "ttt_amongusskeld"
 local playerColors = {}
@@ -60,6 +62,8 @@ local secondsPassedVoting = 0
 local numaliveplayers = 0
 local meetingActiveTimeLeft = 0
 local traitorCount = 0
+
+local dripMusic = {Sound("amongus/dripmusic1.mp3"), Sound("amongus/dripmusic2.mp3"), Sound("amongus/dripmusic3.mp3")}
 
 -- The RGB values for each Among Us player colour as per the Among Us Wiki
 local auColors = {
@@ -227,7 +231,7 @@ function EVENT:Begin()
                 if emergencyButtonTriggerCount == 1 then
                     ply:SetNWBool("AmongUsPressedEmergencyButton", true)
                     net.Start("AmongUsForceSound")
-                    net.WriteString("emergency")
+                    net.WriteString("amongus/emergencymeeting.mp3")
                     net.Broadcast()
                     self:AmongUsVote(ply:Nick(), true)
                 end
@@ -355,6 +359,12 @@ function EVENT:Begin()
             ply:Freeze(false)
             net.Start("AmongUsEmergencyMeetingBind")
             net.Send(ply)
+
+            timer.Simple(1, function()
+                net.Start("AmongUsForceSound")
+                net.WriteString("amongus/dripmusic1.mp3")
+                net.Send(ply)
+            end)
 
             -- Fail-safe to hopefully prevent screen staying black
             timer.Simple(3, function()
@@ -485,7 +495,7 @@ function EVENT:Begin()
                 -- Play the Among Us crewmate/impostor win music at the end of the round
                 timer.Simple(0.5, function()
                     net.Start("AmongUsForceSound")
-                    net.WriteString("innocentwin")
+                    net.WriteString("amongus/crewmatewin.mp3")
                     net.Broadcast()
                 end)
 
@@ -500,7 +510,7 @@ function EVENT:Begin()
             else
                 timer.Simple(0.5, function()
                     net.Start("AmongUsForceSound")
-                    net.WriteString("innocentwin")
+                    net.WriteString("amongus/crewmatewin.mp3")
                     net.Broadcast()
                 end)
 
@@ -511,7 +521,7 @@ function EVENT:Begin()
             timer.Simple(0.5, function()
                 PrintMessage(HUD_PRINTTALK, "In Among Us,\nTraitors win when there are as many innocents as traitors alive")
                 net.Start("AmongUsForceSound")
-                net.WriteString("traitorwin")
+                net.WriteString("amongus/impostorwin.mp3")
                 net.Broadcast()
             end)
 
@@ -519,7 +529,7 @@ function EVENT:Begin()
         elseif numAliveTraitors == 0 then
             timer.Simple(0.5, function()
                 net.Start("AmongUsForceSound")
-                net.WriteString("innocentwin")
+                net.WriteString("amongus/crewmatewin.mp3")
                 net.Broadcast()
             end)
 
@@ -633,12 +643,8 @@ net.Receive("AmongUsPlayerVoted", function(ln, ply)
 
     -- Play the vote sound to all players, if they are not trying to vote multiple times
     if voterepeatblock == 0 then
-        for _, v in pairs(player.GetAll()) do
-            v:EmitSound(Sound("amongus/vote.mp3"))
-        end
-
         net.Start("AmongUsForceSound")
-        net.WriteString("vote")
+        net.WriteString("amongus/vote.mp3")
         net.Broadcast()
     end
 
@@ -949,13 +955,18 @@ function EVENT:AmongUsVoteEnd()
     -- Play the Among Us text sound, with a 1 second delay so it doesn't play over the randomat alert sound
     timer.Simple(1, function()
         if not roundOver then
-            for _, ply in pairs(player.GetAll()) do
-                ply:EmitSound(Sound("amongus/votetext.mp3"))
-            end
-
             net.Start("AmongUsForceSound")
-            net.WriteString("votetext")
+            net.WriteString("amongus/votetext.mp3")
             net.Broadcast()
+
+            timer.Simple(2.5, function()
+                if not roundOver then
+                    local chosenMusic = dripMusic[math.random(1, #dripMusic)]
+                    net.Start("AmongUsForceSound")
+                    net.WriteString(chosenMusic)
+                    net.Broadcast()
+                end
+            end)
         end
     end)
 end
@@ -978,6 +989,7 @@ function EVENT:AmongUsConVarResync()
     SetGlobalBool("randomat_amongus_auto_trigger", GetConVar("randomat_amongus_auto_trigger"):GetBool())
     SetGlobalInt("randomat_amongus_task_threshhold", GetConVar("randomat_amongus_task_threshhold"):GetInt())
     SetGlobalBool("randomat_amongus_sprinting", GetConVar("randomat_amongus_sprinting"):GetBool())
+    SetGlobalBool("randomat_amongus_music", GetConVar("randomat_amongus_music"):GetBool())
 end
 
 function EVENT:End()
@@ -1072,7 +1084,7 @@ function EVENT:GetConVars()
 
     local checks = {}
 
-    for _, v in pairs({"freeze", "confirm_ejects", "anonymous_voting", "taskbar_update", "auto_trigger", "sprinting"}) do
+    for _, v in pairs({"freeze", "confirm_ejects", "anonymous_voting", "taskbar_update", "auto_trigger", "sprinting", "music"}) do
         local name = "randomat_" .. self.id .. "_" .. v
 
         if ConVarExists(name) then

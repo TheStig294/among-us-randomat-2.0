@@ -1,3 +1,5 @@
+_This mod adds a single randomat event to TTT, which turns the round into a game of Among Us!_\
+_Most of the usual options from Among Us are below, plus a few more!_
 # Randomat Options
 _Words in italics_ are console commands. Press ` or ~ in a game of TTT to open the console and type in console commands (plus a space and a number) to change this mod’s settings. \
 \
@@ -7,7 +9,7 @@ _randomat_amongus_voting_timer_ - Default: 30 -\
 Length of voting time in seconds\
 \
 _randomat_amongus_discussion_timer_ - Default: 15 -\
-Length of vote discussion time in seconds\
+Length of vote discussion time in seconds, set to 0 to disable\
 \
 _randomat_amongus_votepct_ - Default: 0 -\
 Vote percentage required to eject\
@@ -46,4 +48,7 @@ _randomat_amongus_auto_trigger_ - Default: 1 -\
 Trigger every round on special map: ttt_amongusskeld\
 \
 _randomat_amongus_task_threshhold_ - Default: 60 -\
-Seconds until tasks/guns aren't found too quickly
+Seconds until tasks/guns aren't found too quickly\
+\
+_randomat_amongus_music_ - Default: 1 -\
+Play the Among Us drip music
