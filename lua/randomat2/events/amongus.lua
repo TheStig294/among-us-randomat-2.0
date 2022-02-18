@@ -357,6 +357,11 @@ function EVENT:Begin()
     -- Updating everyone's new role to everyone else, if roles were changed
     SendFullStateUpdate()
 
+    -- Removes all corpses from before the event began
+    for _, ent in ipairs(ents.FindByClass("prop_ragdoll")) do
+        ent:Remove()
+    end
+
     -- Setting all hooks
     -- If someone kills someone else as a traitor, they receive another knife after a cooldown (as set by the cooldown length convar)
     self:AddHook("PostEntityTakeDamage", function(ent, dmginfo, took)
