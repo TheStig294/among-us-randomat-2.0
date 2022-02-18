@@ -346,7 +346,7 @@ function EVENT:Begin()
         end)
 
         -- Reminding everyone they can press the buy menu button to call an emergency meeting
-        timer.Simple(9, function()
+        timer.Simple(10, function()
             ply:Freeze(false)
             net.Start("AmongUsEmergencyMeetingBind")
             net.Send(ply)
