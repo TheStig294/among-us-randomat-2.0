@@ -509,6 +509,7 @@ function EVENT:Begin()
         elseif numAliveInnocents <= numAliveTraitors then
             -- If there are as many traitors as innocents, traitors win
             timer.Simple(0.5, function()
+                PrintMessage(HUD_PRINTTALK, "In Among Us,\nTraitors win when there are as many innocents as traitors alive")
                 net.Start("AmongUsForceSound")
                 net.WriteString("traitorwin")
                 net.Broadcast()
