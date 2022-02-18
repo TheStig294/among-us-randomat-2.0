@@ -272,7 +272,7 @@ function EVENT:Begin()
         -- The guns are added after a random amount of extra seconds
         timer.Create("AmongUsTotalWeaponDecrease", 10, 0, function()
             timer.Simple(math.random(1, 10), function()
-                if not roundOver and not meetingActive then
+                if not (roundOver or meetingActive) then
                     weaponsFound = weaponsFound + math.Round(wepspawns * 1 / 30)
                     net.Start("AmongUsTaskBarUpdate")
                     net.WriteInt(weaponsFound, 16)
