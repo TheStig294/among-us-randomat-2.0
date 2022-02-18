@@ -1,20 +1,19 @@
 -- Setting variables we'll need at some point
-local Frame
-local lst
-local amongUsShhPopup
-local amongusvictimpopup
-local amongusbodyreportedpopup
-local amongusemergencymeetingpopup
-local amongusrolepopup
-local amongUsVoteFrameDrawn = false
-local amongUsEmergencyMeetingCalled = false
+local votingFrame
+local votingList
+local shhPopup
+local victimPopup
+local bodyReportedPopup
+local emergencyMeetingPopup
+local voteFrameDrawn = false
+local emergencyMeetingCalled = false
 local contextBinding = input.LookupBinding("+menu_context", true)
 local useBinding = input.LookupBinding("+use", true)
 local firstEmergencyMeetingBindMessage = true
 local meeting = false
 local foundweps = 0
 local livefoundweps = 0
-local amongUsEmergencyMeetings = 0
+local emergencyMeetingsLeft = 0
 
 -- Plays the impostor kill 'squlech' sound on demand
 net.Receive("AmongUsSqulech", function()
@@ -23,7 +22,9 @@ end)
 
 -- A pop-up message reminder to players that still have emergency meetings left
 net.Receive("AmongUsEmergencyMeetingBind", function()
-    if amongUsEmergencyMeetings > 0 and game.GetMap() ~= "ttt_amongusskeld" then
+    local ply = LocalPlayer()
+
+    if emergencyMeetingsLeft > 0 and game.GetMap() ~= "ttt_amongusskeld" and ply:Alive() and not ply:IsSpec() then
         LocalPlayer():ChatPrint("Press '" .. string.upper(contextBinding) .. "' to call an emergency meeting")
 
         if not firstEmergencyMeetingBindMessage then
@@ -49,11 +50,11 @@ net.Receive("AmongUsTaskBarUpdate", function()
 end)
 
 -- All functions called when this randomat starts
-net.Receive("AmongUsInitialHooks", function()
+net.Receive("AmongUsEventBegin", function()
     -- Stopping the TTT role hint box from covering the among us intro images
     amongUsStartPopupDuration = GetConVar("ttt_startpopup_duration"):GetInt()
     RunConsoleCommand("ttt_startpopup_duration", "0")
-    amongUsEmergencyMeetings = GetGlobalInt("randomat_amongus_emergency_meetings")
+    emergencyMeetingsLeft = GetGlobalInt("randomat_amongus_emergency_meetings")
     local firstPress = true
 
     -- Displays a message if the sprint key is pressed while sprinting is disabled 
@@ -66,14 +67,14 @@ net.Receive("AmongUsInitialHooks", function()
                 ply:PrintMessage(HUD_PRINTTALK, "Dead people can't call emergency meetings")
             elseif meeting and firstPress then
                 ply:PrintMessage(HUD_PRINTTALK, "A meeting is already in progress")
-            elseif amongUsEmergencyMeetingCalled and firstPress then
+            elseif emergencyMeetingCalled and firstPress then
                 ply:PrintMessage(HUD_PRINTTALK, "An emergency meeting has already been called!")
-            elseif amongUsEmergencyMeetings <= 0 and firstPress then
+            elseif emergencyMeetingsLeft <= 0 and firstPress then
                 ply:PrintMessage(HUD_PRINTTALK, "You are out of emergency meetings")
-            elseif amongUsEmergencyMeetings > 0 and firstPress then
-                amongUsEmergencyMeetings = amongUsEmergencyMeetings - 1
+            elseif emergencyMeetingsLeft > 0 and firstPress then
+                emergencyMeetingsLeft = emergencyMeetingsLeft - 1
                 ply:PrintMessage(HUD_PRINTCENTER, "Calling an emergency meeting in " .. GetGlobalInt("randomat_amongus_emergency_delay") .. " seconds!")
-                ply:PrintMessage(HUD_PRINTTALK, "Calling an emergency meeting in " .. GetGlobalInt("randomat_amongus_emergency_delay") .. " seconds! \nYou have " .. amongUsEmergencyMeetings .. " emergency meeting(s) left.")
+                ply:PrintMessage(HUD_PRINTTALK, "Calling an emergency meeting in " .. GetGlobalInt("randomat_amongus_emergency_delay") .. " seconds! \nYou have " .. emergencyMeetingsLeft .. " emergency meeting(s) left.")
                 net.Start("AmongUsEmergencyMeeting")
                 net.SendToServer()
             end
@@ -191,39 +192,39 @@ end)
 
 -- Prevents emergency meetings from being called from multiple players at once, this net message is sent to all clients once someone presses the emergency meeting button
 net.Receive("AmongUsEmergencyMeetingCall", function()
-    amongUsEmergencyMeetingCalled = true
+    emergencyMeetingCalled = true
 end)
 
 -- Handling player voting, most notably, drawing the voting window
 net.Receive("AmongUsVoteBegin", function()
-    amongUsVoteFrameDrawn = true
+    voteFrameDrawn = true
     -- Frame Setup
-    Frame = vgui.Create("DFrame")
-    Frame:SetPos(10, ScrH() - 800)
-    Frame:SetSize(200, 300)
-    Frame:SetTitle("Hold [Tab] to vote")
-    Frame:SetDraggable(false)
-    Frame:ShowCloseButton(false)
-    Frame:SetVisible(true)
-    Frame:SetDeleteOnClose(true)
+    votingFrame = vgui.Create("DFrame")
+    votingFrame:SetPos(10, ScrH() - 800)
+    votingFrame:SetSize(200, 300)
+    votingFrame:SetTitle("Hold [Tab] to vote")
+    votingFrame:SetDraggable(false)
+    votingFrame:ShowCloseButton(false)
+    votingFrame:SetVisible(true)
+    votingFrame:SetDeleteOnClose(true)
     -- Player List
-    lst = vgui.Create("DListView", Frame)
-    lst:Dock(FILL)
-    lst:SetMultiSelect(false)
-    lst:AddColumn("Players")
-    lst:AddColumn("Votes")
+    votingList = vgui.Create("DListView", votingFrame)
+    votingList:Dock(FILL)
+    votingList:SetMultiSelect(false)
+    votingList:AddColumn("Players")
+    votingList:AddColumn("Votes")
 
     for _, ply in pairs(player.GetAll()) do
         if (ply:Alive() and not ply:IsSpec()) then
-            lst:AddLine(ply:Nick(), 0)
+            votingList:AddLine(ply:Nick(), 0)
         end
     end
 
     -- Adding a skip vote option
-    lst:AddLine("[Skip Vote]", 0)
+    votingList:AddLine("[Skip Vote]", 0)
 
     -- When a player clicks to vote for someone
-    lst.OnRowSelected = function(lst, index, pnl)
+    votingList.OnRowSelected = function(votingList, index, pnl)
         if LocalPlayer():Alive() and not LocalPlayer():IsSpec() then
             net.Start("AmongUsPlayerVoted")
             net.WriteString(pnl:GetColumnText(1))
@@ -238,8 +239,8 @@ net.Receive("AmongUsVoteBegin", function()
         local votee = net.ReadString()
         local num = net.ReadInt(32)
 
-        if IsValid(lst) and num ~= 0 then
-            for _, ply in pairs(lst:GetLines()) do
+        if IsValid(votingList) and num ~= 0 then
+            for _, ply in pairs(votingList:GetLines()) do
                 if ply:GetColumnText(1) == votee then
                     ply:SetColumnText(2, num)
                 end
@@ -250,201 +251,124 @@ end)
 
 -- Removing the voting window when a vote is over and letting everyone's client know an emergency meeting can be called again
 net.Receive("AmongUsVoteEnd", function()
-    if amongUsVoteFrameDrawn then
-        Frame:Close()
-        amongUsVoteFrameDrawn = false
+    if voteFrameDrawn then
+        votingFrame:Close()
+        voteFrameDrawn = false
     end
 
     meeting = false
-    amongUsEmergencyMeetingCalled = false
-end)
-
--- Removing all hooks are resetting all variables needed to reset at the end of the round
-net.Receive("AmongUsEventRoundEnd", function()
-    hook.Remove("PlayerBindPress", "AmongUsRandomatBuyMenuDisable")
-    hook.Remove("SetupWorldFog", "AmongUsWorldFog")
-    hook.Remove("SetupSkyboxFog", "AmongUsSkyboxFog")
-    hook.Remove("DrawOverlay", "AmongUsTaskUI")
-    hook.Remove("TTTPlayerSpeedModifier", "AmongUsPlayerSpeed")
-    hook.Remove("PreDrawHalos", "AmongUsHaloReactor")
-    hook.Remove("PreDrawHalos", "AmongUsHaloO2")
-    hook.Remove("PreDrawHalos", "AmongUsHaloComms")
-    hook.Remove("PreDrawHalos", "AmongUsHaloLights")
-    amongUsEmergencyMeetingCalled = false
-    firstEmergencyMeetingBindMessage = true
-    foundweps = 0
-    livefoundweps = 0
-    -- Resetting startup popup duration to default
-    RunConsoleCommand("ttt_startpopup_duration", tostring(amongUsStartPopupDuration))
+    emergencyMeetingCalled = false
 end)
 
 -- The intro popups shown when the randomat is started, dynamically changes with the number of traitors in the game
 net.Receive("AmongUsShhPopup", function()
     local traitorCount = net.ReadUInt(8)
-    amongUsShhPopup = vgui.Create("DFrame")
+    shhPopup = vgui.Create("DFrame")
     local xSize = ScrW()
     local ySize = ScrH()
     local pos1 = (ScrW() - xSize) / 2
     local pos2 = (ScrH() - ySize) / 2
-    amongUsShhPopup:SetPos(pos1, pos2)
-    amongUsShhPopup:SetSize(xSize, ySize)
-    amongUsShhPopup:ShowCloseButton(false)
-    amongUsShhPopup:MakePopup()
-    amongUsShhPopup.Paint = function(self, w, h) end
-    local image = vgui.Create("DImage", amongUsShhPopup)
+    shhPopup:SetPos(pos1, pos2)
+    shhPopup:SetSize(xSize, ySize)
+    shhPopup:ShowCloseButton(false)
+    shhPopup:MakePopup()
+    shhPopup.Paint = function(self, w, h) end
+    local image = vgui.Create("DImage", shhPopup)
     image:SetImage("materials/vgui/ttt/amongus/shhhhhhh.png")
     image:SetPos(0, 0)
     image:SetSize(xSize, ySize)
 
     timer.Simple(4, function()
-        amongUsShhPopup:Close()
         LocalPlayer():EmitSound(Sound("amongus/roundbegin.mp3"))
 
         -- If there are more than 3 traitors, a generic intro popup is shown (where the number of traitors among us isn't mentioned)
         if traitorCount < 4 then
             if LocalPlayer():GetRole() == ROLE_INNOCENT then
-                amongusrolepopup = vgui.Create("DFrame")
-                local xSize = ScrW()
-                local ySize = ScrH()
-                local pos1 = (ScrW() - xSize) / 2
-                local pos2 = (ScrH() - ySize) / 2
-                amongusrolepopup:SetPos(pos1, pos2)
-                amongusrolepopup:SetSize(xSize, ySize)
-                amongusrolepopup:ShowCloseButton(false)
-                amongusrolepopup:MakePopup()
-                amongusrolepopup.Paint = function(self, w, h) end
-                local image = vgui.Create("DImage", amongusrolepopup)
                 image:SetImage("materials/vgui/ttt/amongus/crewmate" .. traitorCount .. ".png")
-                image:SetPos(0, 0)
-                image:SetSize(xSize, ySize)
             else
-                amongusrolepopup = vgui.Create("DFrame")
-                local xSize = ScrW()
-                local ySize = ScrH()
-                local pos1 = (ScrW() - xSize) / 2
-                local pos2 = (ScrH() - ySize) / 2
-                amongusrolepopup:SetPos(pos1, pos2)
-                amongusrolepopup:SetSize(xSize, ySize)
-                amongusrolepopup:ShowCloseButton(false)
-                amongusrolepopup:MakePopup()
-                amongusrolepopup.Paint = function(self, w, h) end
-                local image = vgui.Create("DImage", amongusrolepopup)
                 image:SetImage("materials/vgui/ttt/amongus/impostor" .. traitorCount .. ".png")
-                image:SetPos(0, 0)
-                image:SetSize(xSize, ySize)
             end
-
-            timer.Simple(5, function()
-                amongusrolepopup:Close()
-                LocalPlayer():ScreenFade(SCREENFADE.IN, Color(0, 0, 0, 255), 1, 0)
-            end)
         else
             if LocalPlayer():GetRole() == ROLE_INNOCENT then
-                amongusrolepopup = vgui.Create("DFrame")
-                local xSize = ScrW()
-                local ySize = ScrH()
-                local pos1 = (ScrW() - xSize) / 2
-                local pos2 = (ScrH() - ySize) / 2
-                amongusrolepopup:SetPos(pos1, pos2)
-                amongusrolepopup:SetSize(xSize, ySize)
-                amongusrolepopup:ShowCloseButton(false)
-                amongusrolepopup:MakePopup()
-                amongusrolepopup.Paint = function(self, w, h) end
-                local image = vgui.Create("DImage", amongusrolepopup)
                 image:SetImage("materials/vgui/ttt/amongus/crewmate.png")
-                image:SetPos(0, 0)
-                image:SetSize(xSize, ySize)
             else
-                amongusrolepopup = vgui.Create("DFrame")
-                local xSize = ScrW()
-                local ySize = ScrH()
-                local pos1 = (ScrW() - xSize) / 2
-                local pos2 = (ScrH() - ySize) / 2
-                amongusrolepopup:SetPos(pos1, pos2)
-                amongusrolepopup:SetSize(xSize, ySize)
-                amongusrolepopup:ShowCloseButton(false)
-                amongusrolepopup:MakePopup()
-                amongusrolepopup.Paint = function(self, w, h) end
-                local image = vgui.Create("DImage", amongusrolepopup)
                 image:SetImage("materials/vgui/ttt/amongus/impostor1.png")
-                image:SetPos(0, 0)
-                image:SetSize(xSize, ySize)
             end
-
-            timer.Simple(5, function()
-                amongusrolepopup:Close()
-                LocalPlayer():ScreenFade(SCREENFADE.IN, Color(0, 0, 0, 255), 1, 0)
-            end)
         end
+
+        timer.Simple(5, function()
+            shhPopup:Close()
+            LocalPlayer():ScreenFade(SCREENFADE.IN, Color(0, 0, 0, 255), 1, 0)
+        end)
     end)
 end)
 
 -- The popup that is shown when a player is killed by an impostor
 net.Receive("AmongUsVictimPopup", function()
     LocalPlayer():EmitSound(Sound("amongus/victimkill.mp3"))
-    amongusvictimpopup = vgui.Create("DFrame")
+    victimPopup = vgui.Create("DFrame")
     local xSize = ScrW()
     local ySize = ScrH()
     local pos1 = (ScrW() - xSize) / 2
     local pos2 = (ScrH() - ySize) / 2
-    amongusvictimpopup:SetPos(pos1, pos2)
-    amongusvictimpopup:SetSize(xSize, ySize)
-    amongusvictimpopup:ShowCloseButton(false)
-    amongusvictimpopup:MakePopup()
-    amongusvictimpopup.Paint = function(self, w, h) end
-    local image = vgui.Create("DImage", amongusvictimpopup)
+    victimPopup:SetPos(pos1, pos2)
+    victimPopup:SetSize(xSize, ySize)
+    victimPopup:ShowCloseButton(false)
+    victimPopup:MakePopup()
+    victimPopup.Paint = function(self, w, h) end
+    local image = vgui.Create("DImage", victimPopup)
     image:SetImage("materials/vgui/ttt/amongus/victimpopup.png")
     image:SetPos(0, 0)
     image:SetSize(xSize, ySize)
 
     timer.Simple(2, function()
-        amongusvictimpopup:Close()
+        victimPopup:Close()
     end)
 end)
 
 -- The "Body Reported!" popup
 net.Receive("AmongUsBodyReportedPopup", function()
     LocalPlayer():EmitSound(Sound("amongus/bodyreported.mp3"))
-    amongusbodyreportedpopup = vgui.Create("DFrame")
+    bodyReportedPopup = vgui.Create("DFrame")
     local xSize = ScrW()
     local ySize = ScrH()
     local pos1 = (ScrW() - xSize) / 2
     local pos2 = (ScrH() - ySize) / 2
-    amongusbodyreportedpopup:SetPos(pos1, pos2)
-    amongusbodyreportedpopup:SetSize(xSize, ySize)
-    amongusbodyreportedpopup:ShowCloseButton(false)
-    amongusbodyreportedpopup:MakePopup()
-    amongusbodyreportedpopup.Paint = function(self, w, h) end
-    local image = vgui.Create("DImage", amongusbodyreportedpopup)
+    bodyReportedPopup:SetPos(pos1, pos2)
+    bodyReportedPopup:SetSize(xSize, ySize)
+    bodyReportedPopup:ShowCloseButton(false)
+    bodyReportedPopup:MakePopup()
+    bodyReportedPopup.Paint = function(self, w, h) end
+    local image = vgui.Create("DImage", bodyReportedPopup)
     image:SetImage("materials/vgui/ttt/amongus/bodyreported.png")
     image:SetPos(0, 0)
     image:SetSize(xSize, ySize)
 
     timer.Simple(2, function()
-        amongusbodyreportedpopup:Close()
+        bodyReportedPopup:Close()
     end)
 end)
 
 -- The emergency meeting popup
 net.Receive("AmongUsEmergencyMeetingPopup", function()
     LocalPlayer():EmitSound(Sound("amongus/emergencymeeting.mp3"))
-    amongusemergencymeetingpopup = vgui.Create("DFrame")
+    emergencyMeetingPopup = vgui.Create("DFrame")
     local xSize = ScrW()
     local ySize = ScrH()
     local pos1 = (ScrW() - xSize) / 2
     local pos2 = (ScrH() - ySize) / 2
-    amongusemergencymeetingpopup:SetPos(pos1, pos2)
-    amongusemergencymeetingpopup:SetSize(xSize, ySize)
-    amongusemergencymeetingpopup:ShowCloseButton(false)
-    amongusemergencymeetingpopup:MakePopup()
-    amongusemergencymeetingpopup.Paint = function(self, w, h) end
-    local image = vgui.Create("DImage", amongusemergencymeetingpopup)
+    emergencyMeetingPopup:SetPos(pos1, pos2)
+    emergencyMeetingPopup:SetSize(xSize, ySize)
+    emergencyMeetingPopup:ShowCloseButton(false)
+    emergencyMeetingPopup:MakePopup()
+    emergencyMeetingPopup.Paint = function(self, w, h) end
+    local image = vgui.Create("DImage", emergencyMeetingPopup)
     image:SetImage("materials/vgui/ttt/amongus/emergencymeeting.png")
     image:SetPos(0, 0)
     image:SetSize(xSize, ySize)
 
     timer.Simple(2, function()
-        amongusemergencymeetingpopup:Close()
+        emergencyMeetingPopup:Close()
     end)
 end)
 
@@ -494,4 +418,23 @@ net.Receive("AmongUsStopHalo", function()
     elseif entity == "lights" then
         hook.Remove("PreDrawHalos", "AmongUsHaloLights")
     end
+end)
+
+-- Removing all hooks are resetting all variables needed to reset at the end of the round
+net.Receive("AmongUsEventRoundEnd", function()
+    hook.Remove("PlayerBindPress", "AmongUsRandomatBuyMenuDisable")
+    hook.Remove("SetupWorldFog", "AmongUsWorldFog")
+    hook.Remove("SetupSkyboxFog", "AmongUsSkyboxFog")
+    hook.Remove("DrawOverlay", "AmongUsTaskUI")
+    hook.Remove("TTTPlayerSpeedModifier", "AmongUsPlayerSpeed")
+    hook.Remove("PreDrawHalos", "AmongUsHaloReactor")
+    hook.Remove("PreDrawHalos", "AmongUsHaloO2")
+    hook.Remove("PreDrawHalos", "AmongUsHaloComms")
+    hook.Remove("PreDrawHalos", "AmongUsHaloLights")
+    emergencyMeetingCalled = false
+    firstEmergencyMeetingBindMessage = true
+    foundweps = 0
+    livefoundweps = 0
+    -- Resetting startup popup duration to default
+    RunConsoleCommand("ttt_startpopup_duration", tostring(amongUsStartPopupDuration))
 end)
