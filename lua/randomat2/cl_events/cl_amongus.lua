@@ -1,7 +1,7 @@
---Setting variables we'll need at some point
+-- Setting variables we'll need at some point
 local Frame
 local lst
-local amongusshhhhhhhpopup
+local amongUsShhPopup
 local amongusvictimpopup
 local amongusbodyreportedpopup
 local amongusemergencymeetingpopup
@@ -16,12 +16,12 @@ local foundweps = 0
 local livefoundweps = 0
 local amongUsEmergencyMeetings = 0
 
---Plays the impostor kill 'squlech' sound on demand
+-- Plays the impostor kill 'squlech' sound on demand
 net.Receive("AmongUsSqulech", function()
     LocalPlayer():EmitSound(Sound("amongus/squlech.mp3"))
 end)
 
---A pop-up message reminder to players that still have emergency meetings left
+-- A pop-up message reminder to players that still have emergency meetings left
 net.Receive("AmongUsEmergencyMeetingBind", function()
     if amongUsEmergencyMeetings > 0 and game.GetMap() ~= "ttt_amongusskeld" then
         LocalPlayer():ChatPrint("Press '" .. string.upper(contextBinding) .. "' to call an emergency meeting")
@@ -34,12 +34,12 @@ net.Receive("AmongUsEmergencyMeetingBind", function()
     end
 end)
 
---An analogue to the sever-side meeting variable, used to prevent an emergency being called during a meeting
+-- An analogue to the sever-side meeting variable, used to prevent an emergency being called during a meeting
 net.Receive("AmongUsMeetingCheck", function()
     meeting = true
 end)
 
---Updates the taskbar when a weapon is found/task complete, different variables to handle when tasks are set to only update when a meeting starts
+-- Updates the taskbar when a weapon is found/task complete, different variables to handle when tasks are set to only update when a meeting starts
 net.Receive("AmongUsTaskBarUpdate", function()
     if GetGlobalBool("randomat_amongus_taskbar_update") then
         livefoundweps = net.ReadInt(16)
@@ -48,9 +48,9 @@ net.Receive("AmongUsTaskBarUpdate", function()
     end
 end)
 
---All functions called when this randomat starts
+-- All functions called when this randomat starts
 net.Receive("AmongUsInitialHooks", function()
-    --Stopping the TTT role hint box from covering the among us intro images
+    -- Stopping the TTT role hint box from covering the among us intro images
     amongUsStartPopupDuration = GetConVar("ttt_startpopup_duration"):GetInt()
     RunConsoleCommand("ttt_startpopup_duration", "0")
     amongUsEmergencyMeetings = GetGlobalInt("randomat_amongus_emergency_meetings")
@@ -99,7 +99,7 @@ net.Receive("AmongUsInitialHooks", function()
         hook.Remove("Think", "TTTSprint4Think")
     end
 
-    --Limits the player's view distance like in among us, traitors and innocents can have differing view distances (in among us, impostors typically can see further than crewmates)
+    -- Limits the player's view distance like in among us, traitors and innocents can have differing view distances (in among us, impostors typically can see further than crewmates)
     hook.Add("SetupWorldFog", "AmongUsWorldFog", function()
         render.FogMode(MATERIAL_FOG_LINEAR)
         render.FogColor(0, 0, 0)
@@ -116,7 +116,7 @@ net.Receive("AmongUsInitialHooks", function()
         return true
     end)
 
-    --If a map has a 3D skybox, apply a fog effect to that too
+    -- If a map has a 3D skybox, apply a fog effect to that too
     hook.Add("SetupSkyboxFog", "AmongUsSkyboxFog", function(scale)
         render.FogMode(MATERIAL_FOG_LINEAR)
         render.FogColor(0, 0, 0)
@@ -133,7 +133,7 @@ net.Receive("AmongUsInitialHooks", function()
         return true
     end)
 
-    --This net message is also used for updating the taskbar
+    -- This net message is also used for updating the taskbar
     local totalwepcount = net.ReadInt(16)
 
     surface.CreateFont("HealthAmmo", {
@@ -142,17 +142,17 @@ net.Receive("AmongUsInitialHooks", function()
         weight = 750
     })
 
-    --Adds the taskbar after the among us intro popups are done
+    -- Adds the taskbar after the among us intro popups are done
     timer.Simple(11, function()
         if GetGlobalBool("AmongUsTaskDisable") then
             timer.Simple(2, function()
-                --Adds an on-screen message to players telling them how to complete tasks on the special among us map: ttt_amongusskeld
+                -- Adds an on-screen message to players telling them how to complete tasks on the special among us map: ttt_amongusskeld
                 LocalPlayer():PrintMessage(HUD_PRINTCENTER, "Press '" .. string.upper(useBinding) .. "' on the orange lights to complete tasks!")
                 LocalPlayer():ChatPrint("Press '" .. string.upper(useBinding) .. "' on the orange lights to complete tasks!")
             end)
         end
 
-        --Drawing the taskbar
+        -- Drawing the taskbar
         hook.Add("DrawOverlay", "AmongUsTaskUI", function()
             if GetGlobalBool("randomat_amongus_taskbar_update") and meeting then
                 foundweps = livefoundweps
@@ -161,7 +161,7 @@ net.Receive("AmongUsInitialHooks", function()
             local pl = LocalPlayer()
             local text
 
-            --If on ttt_amongusskeld, say "Tasks done" rather than "Guns to win" to reflect on this map there are actual tasks to do 
+            -- If on ttt_amongusskeld, say "Tasks done" rather than "Guns to win" to reflect on this map there are actual tasks to do 
             if GetGlobalBool("AmongUsTaskDisable") then
                 text = string.format("%i / %02i", foundweps, totalwepcount) .. " Tasks Done"
             else
@@ -170,7 +170,7 @@ net.Receive("AmongUsInitialHooks", function()
 
             local y = ScrH() - 59
 
-            --Prevents the taskbar appearing while dead, paused or when tasks are removed
+            -- Prevents the taskbar appearing while dead, paused or when tasks are removed
             if LocalPlayer():Alive() and not LocalPlayer():IsSpec() and GetGlobalBool("AmongUsGunWinRemove") == false and gui.IsGameUIVisible() == false then
                 local texttable = {}
                 texttable.font = "HealthAmmo"
@@ -189,15 +189,15 @@ net.Receive("AmongUsInitialHooks", function()
     end)
 end)
 
---Prevents emergency meetings from being called from multiple players at once, this net message is sent to all clients once someone presses the emergency meeting button
+-- Prevents emergency meetings from being called from multiple players at once, this net message is sent to all clients once someone presses the emergency meeting button
 net.Receive("AmongUsEmergencyMeetingCall", function()
     amongUsEmergencyMeetingCalled = true
 end)
 
---Handling player voting, most notably, drawing the voting window
-net.Receive("AmongUsEventBegin", function()
+-- Handling player voting, most notably, drawing the voting window
+net.Receive("AmongUsVoteBegin", function()
     amongUsVoteFrameDrawn = true
-    --Frame Setup
+    -- Frame Setup
     Frame = vgui.Create("DFrame")
     Frame:SetPos(10, ScrH() - 800)
     Frame:SetSize(200, 300)
@@ -206,23 +206,23 @@ net.Receive("AmongUsEventBegin", function()
     Frame:ShowCloseButton(false)
     Frame:SetVisible(true)
     Frame:SetDeleteOnClose(true)
-    --Player List
+    -- Player List
     lst = vgui.Create("DListView", Frame)
     lst:Dock(FILL)
     lst:SetMultiSelect(false)
     lst:AddColumn("Players")
     lst:AddColumn("Votes")
 
-    for k, v in pairs(player.GetAll()) do
-        if (v:Alive() and not v:IsSpec()) then
-            lst:AddLine(v:Nick(), 0)
+    for _, ply in pairs(player.GetAll()) do
+        if (ply:Alive() and not ply:IsSpec()) then
+            lst:AddLine(ply:Nick(), 0)
         end
     end
 
-    --Adding a skip vote option
+    -- Adding a skip vote option
     lst:AddLine("[Skip Vote]", 0)
 
-    --When a player clicks to vote for someone
+    -- When a player clicks to vote for someone
     lst.OnRowSelected = function(lst, index, pnl)
         if LocalPlayer():Alive() and not LocalPlayer():IsSpec() then
             net.Start("AmongUsPlayerVoted")
@@ -233,23 +233,23 @@ net.Receive("AmongUsEventBegin", function()
         end
     end
 
-    --Updating the number of votes for a player when someone votes
+    -- Updating the number of votes for a player when someone votes
     net.Receive("AmongUsPlayerVoted", function()
         local votee = net.ReadString()
         local num = net.ReadInt(32)
 
         if IsValid(lst) and num ~= 0 then
-            for k, v in pairs(lst:GetLines()) do
-                if v:GetColumnText(1) == votee then
-                    v:SetColumnText(2, num)
+            for _, ply in pairs(lst:GetLines()) do
+                if ply:GetColumnText(1) == votee then
+                    ply:SetColumnText(2, num)
                 end
             end
         end
     end)
 end)
 
---Removing the voting window when a vote is over and letting everyone's client know an emergency meeting can be called again
-net.Receive("AmongUsEventEnd", function()
+-- Removing the voting window when a vote is over and letting everyone's client know an emergency meeting can be called again
+net.Receive("AmongUsVoteEnd", function()
     if amongUsVoteFrameDrawn then
         Frame:Close()
         amongUsVoteFrameDrawn = false
@@ -259,7 +259,7 @@ net.Receive("AmongUsEventEnd", function()
     amongUsEmergencyMeetingCalled = false
 end)
 
---Removing all hooks are resetting all variables needed to reset at the end of the round
+-- Removing all hooks are resetting all variables needed to reset at the end of the round
 net.Receive("AmongUsEventRoundEnd", function()
     hook.Remove("PlayerBindPress", "AmongUsRandomatBuyMenuDisable")
     hook.Remove("SetupWorldFog", "AmongUsWorldFog")
@@ -274,33 +274,33 @@ net.Receive("AmongUsEventRoundEnd", function()
     firstEmergencyMeetingBindMessage = true
     foundweps = 0
     livefoundweps = 0
-    --Resetting startup popup duration to default
+    -- Resetting startup popup duration to default
     RunConsoleCommand("ttt_startpopup_duration", tostring(amongUsStartPopupDuration))
 end)
 
---The intro popups shown when the randomat is started, dynamically changes with the number of traitors in the game
-net.Receive("AmongUsShhhhhhhPopup", function()
+-- The intro popups shown when the randomat is started, dynamically changes with the number of traitors in the game
+net.Receive("AmongUsShhPopup", function()
     local traitorCount = net.ReadUInt(8)
-    amongusshhhhhhhpopup = vgui.Create("DFrame")
+    amongUsShhPopup = vgui.Create("DFrame")
     local xSize = ScrW()
     local ySize = ScrH()
     local pos1 = (ScrW() - xSize) / 2
     local pos2 = (ScrH() - ySize) / 2
-    amongusshhhhhhhpopup:SetPos(pos1, pos2)
-    amongusshhhhhhhpopup:SetSize(xSize, ySize)
-    amongusshhhhhhhpopup:ShowCloseButton(false)
-    amongusshhhhhhhpopup:MakePopup()
-    amongusshhhhhhhpopup.Paint = function(self, w, h) end
-    local image = vgui.Create("DImage", amongusshhhhhhhpopup)
+    amongUsShhPopup:SetPos(pos1, pos2)
+    amongUsShhPopup:SetSize(xSize, ySize)
+    amongUsShhPopup:ShowCloseButton(false)
+    amongUsShhPopup:MakePopup()
+    amongUsShhPopup.Paint = function(self, w, h) end
+    local image = vgui.Create("DImage", amongUsShhPopup)
     image:SetImage("materials/vgui/ttt/amongus/shhhhhhh.png")
     image:SetPos(0, 0)
     image:SetSize(xSize, ySize)
 
     timer.Simple(4, function()
-        amongusshhhhhhhpopup:Close()
+        amongUsShhPopup:Close()
         LocalPlayer():EmitSound(Sound("amongus/roundbegin.mp3"))
 
-        --If there are more than 3 traitors, a generic intro popup is shown (where the number of traitors among us isn't mentioned)
+        -- If there are more than 3 traitors, a generic intro popup is shown (where the number of traitors among us isn't mentioned)
         if traitorCount < 4 then
             if LocalPlayer():GetRole() == ROLE_INNOCENT then
                 amongusrolepopup = vgui.Create("DFrame")
@@ -379,7 +379,7 @@ net.Receive("AmongUsShhhhhhhPopup", function()
     end)
 end)
 
---The popup that is shown when a player is killed by an impostor
+-- The popup that is shown when a player is killed by an impostor
 net.Receive("AmongUsVictimPopup", function()
     LocalPlayer():EmitSound(Sound("amongus/victimkill.mp3"))
     amongusvictimpopup = vgui.Create("DFrame")
@@ -402,7 +402,7 @@ net.Receive("AmongUsVictimPopup", function()
     end)
 end)
 
---The "Body Reported!" popup
+-- The "Body Reported!" popup
 net.Receive("AmongUsBodyReportedPopup", function()
     LocalPlayer():EmitSound(Sound("amongus/bodyreported.mp3"))
     amongusbodyreportedpopup = vgui.Create("DFrame")
@@ -425,7 +425,7 @@ net.Receive("AmongUsBodyReportedPopup", function()
     end)
 end)
 
---The emergency meeting popup
+-- The emergency meeting popup
 net.Receive("AmongUsEmergencyMeetingPopup", function()
     LocalPlayer():EmitSound(Sound("amongus/emergencymeeting.mp3"))
     amongusemergencymeetingpopup = vgui.Create("DFrame")
@@ -448,7 +448,7 @@ net.Receive("AmongUsEmergencyMeetingPopup", function()
     end)
 end)
 
---Fail-safe to play randomat sounds client-side in case they are muted by the server-side sound mute function
+-- Fail-safe to play randomat sounds client-side in case they are muted by the server-side sound mute function
 net.Receive("AmongUsForceSound", function()
     local sound = net.ReadString()
 
@@ -465,7 +465,7 @@ net.Receive("AmongUsForceSound", function()
     end
 end)
 
---Adds a halo around interactable sabotage-ending objects, when a sabotage is activated on ttt_amongusskeld to help players find where they need to go
+-- Adds a halo around interactable sabotage-ending objects, when a sabotage is activated on ttt_amongusskeld to help players find where they need to go
 net.Receive("AmongUsDrawHalo", function()
     local entity = net.ReadString()
 
