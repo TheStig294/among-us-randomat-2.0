@@ -125,8 +125,6 @@ function EVENT:Begin()
     -- Workaround to prevent the end function from being triggered before the begin function, letting know that the randomat has indeed been activated and the randomat end function is now allowed to be run
     amongusRandomat = true
     roundOver = false
-    local traitorCap = 0
-    local playTimeCount = 0
     SetGlobalBool("AmongUsGunWinRemove", false)
     SetGlobalBool("AmongUsTasksTooFast", false)
     self:AmongUsConVarResync()
@@ -288,7 +286,7 @@ function EVENT:Begin()
     local remainingColors = {}
     table.Add(remainingColors, auColors)
     -- Thanks Desmos + Among Us wiki, this number of traitors ensures games do not instantly end with a double kill
-    traitorCap = math.floor((player.GetCount() / 2) - 1.5)
+    local traitorCap = math.floor((player.GetCount() / 2) - 1.5)
 
     if traitorCap <= 0 then
         traitorCap = 1
@@ -449,6 +447,8 @@ function EVENT:Begin()
             end
         end
     end)
+
+    local playTimeCount = 0
 
     -- Adding 2 custom win conditions
     self:AddHook("TTTCheckForWin", function()
