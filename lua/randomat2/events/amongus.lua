@@ -295,17 +295,18 @@ function EVENT:Begin()
     end
 
     for _, ply in pairs(player.GetAll()) do
-        -- Kill any players trying to exploit the skip vote button to avoid any weird behaviour
-        if ply:Nick() == "[Skip Vote]" then
-            ply:Kill()
-            ply:ChatPrint("Your Steam nickname is incompatible with this randomat.")
-        end
-
         -- Fades out the screen, freezes players and shows the among us intro pop-ups
         ply:ScreenFade(SCREENFADE.OUT, Color(0, 0, 0, 255), 1, 2)
         ply:Freeze(true)
         -- Turning off blood so traitors are not so easily incriminated
         ply:SetBloodColor(DONT_BLEED)
+        ply:SetCredits(0)
+
+        -- Kill any players trying to exploit the skip vote button to avoid any weird behaviour
+        if ply:Nick() == "[Skip Vote]" then
+            ply:Kill()
+            ply:ChatPrint("Your Steam nickname is incompatible with this randomat.")
+        end
 
         -- Setting everyone to either a traitor or innocent, traitors get their 'traitor kill knife'
         if Randomat:IsTraitorTeam(ply) and (traitorCount < traitorCap) then
