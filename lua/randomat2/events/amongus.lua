@@ -796,6 +796,20 @@ function EVENT:AmongUsVote(findername, emergencyMeeting)
 end
 
 function EVENT:AmongUsVoteEnd()
+    -- Unfreeze all players, if convar enabled
+    if GetConVar("randomat_amongus_freeze"):GetBool() then
+        for _, ply in pairs(self:GetAlivePlayers()) do
+            ply:Freeze(false)
+            ply:SetMoveType(MOVETYPE_WALK)
+            ply:GodDisable()
+            ply:ScreenFade(SCREENFADE.PURGE, Color(0, 0, 0, 200), 0, 0)
+            removeHurt = false
+        end
+
+        RunConsoleCommand("phys_timescale", "1")
+        RunConsoleCommand("ragdoll_sleepaftertime", "1")
+    end
+
     -- Tally up votes and the players who are alive and can therefore vote
     local votenumber = 0
 
@@ -906,20 +920,6 @@ function EVENT:AmongUsVoteEnd()
 
     if timer.Exists("AmongUsPlayTimer") then
         timer.UnPause("AmongUsPlayTimer")
-    end
-
-    -- Unfreeze all players, if convar enabled
-    if GetConVar("randomat_amongus_freeze"):GetBool() then
-        for _, ply in pairs(self:GetAlivePlayers()) do
-            ply:Freeze(false)
-            ply:SetMoveType(MOVETYPE_WALK)
-            ply:GodDisable()
-            ply:ScreenFade(SCREENFADE.PURGE, Color(0, 0, 0, 200), 0, 0)
-            removeHurt = false
-        end
-
-        RunConsoleCommand("phys_timescale", "1")
-        RunConsoleCommand("ragdoll_sleepaftertime", "1")
     end
 
     for _, ply in pairs(self:GetAlivePlayers()) do
