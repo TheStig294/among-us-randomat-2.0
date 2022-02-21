@@ -82,26 +82,20 @@ local auColors = {
 }
 
 -- Automatically triggering this randomat on the among us map: "ttt_amongusskeld"
-if GetConVar("randomat_amongus_auto_trigger"):GetBool() and amongUsMap then
-    local autoRandomatOn = false
+if amongUsMap then
+    local autoTrigger = true
 
-    if GetConVar("ttt_randomat_auto"):GetBool() then
-        autoRandomatOn = true
-    end
-
-    hook.Add("TTTPrepareRound", "AmongUsAutoRandomatOff", function()
-        if autoRandomatOn then
-            RunConsoleCommand("ttt_randomat_auto", "0")
-        end
+    hook.Add("TTTPrepareRound", "AmongUsCheckAutoTrigger", function()
+        autoTrigger = GetConVar("randomat_amongus_auto_trigger"):GetBool()
     end)
 
-    hook.Add("TTTBeginRound", "AmongUsTriggeredStart", function()
-        Randomat:SilentTriggerEvent("amongus", player.GetAll()[1])
+    hook.Add("TTTRandomatShouldAuto", "AmongUsMapPreventAutoRandomat", function(id, owner)
+        if autoTrigger then return false end
     end)
 
-    hook.Add("TTTEndRound", "AmongUsAutoRandomatReset", function()
-        if autoRandomatOn then
-            RunConsoleCommand("ttt_randomat_auto", "1")
+    hook.Add("TTTBeginRound", "AmongUsMapAutoTrigger", function()
+        if autoTrigger then
+            Randomat:SilentTriggerEvent("amongus", player.GetAll()[1])
         end
     end)
 end
