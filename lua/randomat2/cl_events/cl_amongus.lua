@@ -391,9 +391,12 @@ end)
 net.Receive("AmongUsForceSound", function()
     local sound = net.ReadString()
     if string.StartWith(sound, "amongus/dripmusic") and GetGlobalBool("randomat_amongus_music") == false then return end
-    RunConsoleCommand("stopsound")
 
     timer.Simple(0.1, function()
+        RunConsoleCommand("stopsound")
+    end)
+
+    timer.Simple(0.2, function()
         surface.PlaySound(sound)
     end)
 end)
