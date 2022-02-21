@@ -130,6 +130,7 @@ function EVENT:Begin()
     if amongUsMap then
         -- If on the among us map, the tasks are sprites instead of guns and there are always 14 of them
         wepspawns = 14
+        weaponsFound = 0
 
         -- Removing all weapons as tasks work by pressing buttons on the among us map
         for _, ent in pairs(ents.GetAll()) do

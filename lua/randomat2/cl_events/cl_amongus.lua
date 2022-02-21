@@ -137,6 +137,7 @@ net.Receive("AmongUsEventBegin", function()
 
     -- This net message is also used for updating the taskbar
     local totalwepcount = net.ReadInt(16)
+    foundweps = 0
 
     surface.CreateFont("HealthAmmo", {
         font = "Trebuchet24",
