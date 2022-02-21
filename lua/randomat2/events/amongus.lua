@@ -859,12 +859,12 @@ function EVENT:AmongUsVoteEnd()
             -- If there are enough votes to skip
         elseif slainply == "[Skip Vote]" then
             self:SmallNotify("No one was ejected. (Skipped)")
-        else
+        elseif IsPlayer(slainply) then
             -- If a player was voted for
             slainply:Kill()
             traitorCount = 0
 
-            for i, ply in pairs(self:GetAlivePlayers(true)) do
+            for i, ply in pairs(self:GetAlivePlayers()) do
                 if ply:GetRole() == ROLE_TRAITOR then
                     traitorCount = traitorCount + 1
                 end
@@ -887,6 +887,8 @@ function EVENT:AmongUsVoteEnd()
             else
                 self:SmallNotify(slainply:Nick() .. " was ejected.")
             end
+        else
+            self:SmallNotify("The voted player is no longer valid. They may have disconnected.")
         end
         -- If nobody votes
     elseif votenumber == 0 then
