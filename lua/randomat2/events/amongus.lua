@@ -152,10 +152,10 @@ function EVENT:Begin()
                 if sounddata.SoundName == "ambient/alarms/alarm_citizen_loop1.wav" then
                     sounddata.SoundName = "amongus/alarmloop.wav"
                     sounddata.Volume = 1
-                    -- Updating the taskbar on completing an in-map task
 
                     return true
                 elseif sounddata.SoundName == "plats/elevbell1.wav" then
+                    -- Updating the taskbar on completing an in-map task
                     soundSpamCount = soundSpamCount + 1
 
                     if soundSpamCount == 3 then
@@ -176,13 +176,16 @@ function EVENT:Begin()
                     end
                 elseif sounddata.SoundName == "npc/overwatch/cityvoice/fcitadel_45sectosingularity.wav" then
                     -- Adding more on-screen alerts for sabotages and a halo around the object to interact with to disable
-                    PrintMessage(HUD_PRINTCENTER, "Stand at the two buttons in Reactor to fix it!")
-                    PrintMessage(HUD_PRINTTALK, "The reactor is melting down in 45 seconds! \nStand at the two buttons in Reactor to fix it!")
+                    timer.Create("AmongUsSabotageMessage", 1, 3, function()
+                        PrintMessage(HUD_PRINTCENTER, "The reactor is melting down in 45 seconds! \nStand at the two buttons in Reactor to fix it!")
+                    end)
 
                     return false
                 elseif sounddata.SoundName == "npc/overwatch/cityvoice/fprison_nonstandardexogen.wav" then
-                    PrintMessage(HUD_PRINTCENTER, "Press keypads in O2 and Admin to fix it!")
-                    PrintMessage(HUD_PRINTTALK, "O2 will be depleted in 30 seconds! \nPress keypads in O2 and Admin to fix it!")
+                    timer.Create("AmongUsSabotageMessage", 1, 3, function()
+                        PrintMessage(HUD_PRINTCENTER, "O2 will be depleted in 30 seconds! \nPress the keypads in O2 and Admin to fix it!")
+                    end)
+
                     net.Start("AmongUsDrawHalo")
                     net.WriteString("o2")
                     net.Broadcast()
@@ -191,8 +194,10 @@ function EVENT:Begin()
 
                     return false
                 elseif sounddata.SoundName == "npc/overwatch/cityvoice/fprison_detectionsystemsout.wav" then
-                    PrintMessage(HUD_PRINTCENTER, "Head to Communications to fix hidden tasks!")
-                    PrintMessage(HUD_PRINTTALK, "Tasks are hidden! \nHead to Communications to fix it!")
+                    timer.Create("AmongUsSabotageMessage", 1, 3, function()
+                        PrintMessage(HUD_PRINTCENTER, "Tasks are hidden! \Press the radio in Communications to fix it!")
+                    end)
+
                     SetGlobalBool("AmongUsGunWinRemove", true)
                     net.Start("AmongUsDrawHalo")
                     net.WriteString("comms")
@@ -200,8 +205,10 @@ function EVENT:Begin()
 
                     return false
                 elseif sounddata.SoundName == "ambient/machines/thumper_shutdown1.wav" then
-                    PrintMessage(HUD_PRINTCENTER, "Head to electrical to fix the lights!")
-                    PrintMessage(HUD_PRINTTALK, "Lights are out! \nHead to electrical to fix them!")
+                    timer.Create("AmongUsSabotageMessage", 1, 3, function()
+                        PrintMessage(HUD_PRINTCENTER, "Lights are out! \nPress the power box in Electrical to fix it!")
+                    end)
+
                     net.Start("AmongUsDrawHalo")
                     net.WriteString("lights")
                     net.Broadcast()
@@ -209,9 +216,6 @@ function EVENT:Begin()
                     net.Start("AmongUsStopHalo")
                     net.WriteString("lights")
                     net.Broadcast()
-                elseif sounddata.SoundName == "ambient/alarms/klaxon1.wav" and not roundOver then
-                    -- Making the emergency meeting button functional
-                    return false
                 else
                     -- Mute all other sounds
                     return false
