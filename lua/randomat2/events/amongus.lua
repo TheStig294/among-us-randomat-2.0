@@ -195,7 +195,7 @@ function EVENT:Begin()
                     return false
                 elseif sounddata.SoundName == "npc/overwatch/cityvoice/fprison_detectionsystemsout.wav" then
                     timer.Create("AmongUsSabotageMessage", 1, 3, function()
-                        PrintMessage(HUD_PRINTCENTER, "Tasks are hidden! \Press the radio in Communications to fix it!")
+                        PrintMessage(HUD_PRINTCENTER, "Tasks are hidden! \nPress the radio in Communications to fix it!")
                     end)
 
                     SetGlobalBool("AmongUsGunWinRemove", true)
