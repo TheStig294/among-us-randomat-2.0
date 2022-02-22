@@ -134,7 +134,7 @@ function EVENT:Begin()
 
         -- Removing all weapons as tasks work by pressing buttons on the among us map
         for _, ent in pairs(ents.GetAll()) do
-            if ent.AutoSpawnable and (ent.Kind == WEAPON_HEAVY or ent.Kind == WEAPON_PISTOL or ent.Kind == WEAPON_NADE) then
+            if ent.AutoSpawnable then
                 ent:Remove()
             end
         end
