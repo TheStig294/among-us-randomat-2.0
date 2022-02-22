@@ -401,34 +401,62 @@ net.Receive("AmongUsForceSound", function()
     end)
 end)
 
--- Adds a halo around interactable sabotage-ending objects, when a sabotage is activated on ttt_amongusskeld to help players find where they need to go
-net.Receive("AmongUsDrawHalo", function()
+-- Adds a sprite around interactable sabotage-ending objects, when a sabotage is activated on ttt_amongusskeld to help players find where they need to go
+net.Receive("AmongUsDrawSprite", function()
     local entity = net.ReadString()
+    local spriteMaterial = Material("VGUI/ttt/amongus/sabotage")
+    local color = Color(0, 0, 0, 150)
+    local reactorButtonPosNorth = Vector(-1942.242554, -252.031250, 34.031250)
+    local reactorButtonPosSouth = Vector(-1941.859131, -967.968750, 34.031250)
+    local o2ButtonPosO2 = Vector(134.000000, -770.500000, 89.000000)
+    local o2ButtonPosAdmin = Vector(113.000000, -493.500000, 80.000000)
+    local commsButtonPos = Vector(-39.000000, -1548.000000, 78.500000)
+    local lightsButtonPos = Vector(-1062.500000, -1041.500000, 95.000000)
 
-    if entity == "o2" then
-        hook.Add("PreDrawHalos", "AmongUsHaloO2", function()
-            halo.Add({Entity(558), Entity(559)}, Color(0, 255, 0), 0, 0, 1, true, true)
+    if entity == "reactor" then
+        hook.Add("HUDPaint", "AmongUsSpriteReactor", function()
+            cam.Start3D()
+            render.SetMaterial(spriteMaterial)
+            render.DrawSprite(reactorButtonPosNorth, 16, 16, color)
+            render.DrawSprite(reactorButtonPosSouth, 16, 16, color)
+            cam.End3D()
+        end)
+    elseif entity == "o2" then
+        hook.Add("HUDPaint", "AmongUsSpriteO2", function()
+            cam.Start3D()
+            render.SetMaterial(spriteMaterial)
+            render.DrawSprite(o2ButtonPosO2, 16, 16, color)
+            render.DrawSprite(o2ButtonPosAdmin, 16, 16, color)
+            cam.End3D()
         end)
     elseif entity == "comms" then
-        hook.Add("PreDrawHalos", "AmongUsHaloComms", function()
-            halo.Add({Entity(566)}, Color(0, 255, 0), 0, 0, 1, true, true)
+        hook.Add("HUDPaint", "AmongUsSpriteComms", function()
+            cam.Start3D()
+            render.SetMaterial(spriteMaterial)
+            render.DrawSprite(commsButtonPos, 16, 16, color)
+            cam.End3D()
         end)
     elseif entity == "lights" then
-        hook.Add("PreDrawHalos", "AmongUsHaloLights", function()
-            halo.Add({Entity(346)}, Color(0, 255, 0), 0, 0, 1, true, true)
+        hook.Add("HUDPaint", "AmongUsSpriteLights", function()
+            cam.Start3D()
+            render.SetMaterial(spriteMaterial)
+            render.DrawSprite(lightsButtonPos, 16, 16, color)
+            cam.End3D()
         end)
     end
 end)
 
-net.Receive("AmongUsStopHalo", function()
+net.Receive("AmongUsStopSprite", function()
     local entity = net.ReadString()
 
-    if entity == "o2" then
-        hook.Remove("PreDrawHalos", "AmongUsHaloO2")
+    if entity == "reactor" then
+        hook.Remove("HUDPaint", "AmongUsSpriteReactor")
+    elseif entity == "o2" then
+        hook.Remove("HUDPaint", "AmongUsSpriteO2")
     elseif entity == "comms" then
-        hook.Remove("PreDrawHalos", "AmongUsHaloComms")
+        hook.Remove("HUDPaint", "AmongUsSpriteComms")
     elseif entity == "lights" then
-        hook.Remove("PreDrawHalos", "AmongUsHaloLights")
+        hook.Remove("HUDPaint", "AmongUsSpriteLights")
     end
 end)
 
@@ -439,10 +467,10 @@ net.Receive("AmongUsEventRoundEnd", function()
     hook.Remove("SetupSkyboxFog", "AmongUsSkyboxFog")
     hook.Remove("DrawOverlay", "AmongUsTaskUI")
     hook.Remove("TTTPlayerSpeedModifier", "AmongUsPlayerSpeed")
-    hook.Remove("PreDrawHalos", "AmongUsHaloReactor")
-    hook.Remove("PreDrawHalos", "AmongUsHaloO2")
-    hook.Remove("PreDrawHalos", "AmongUsHaloComms")
-    hook.Remove("PreDrawHalos", "AmongUsHaloLights")
+    hook.Remove("HUDPaint", "AmongUsSpriteReactor")
+    hook.Remove("HUDPaint", "AmongUsSpriteO2")
+    hook.Remove("HUDPaint", "AmongUsSpriteComms")
+    hook.Remove("HUDPaint", "AmongUsSpriteLights")
     emergencyMeetingCalled = false
     firstEmergencyMeetingBindMessage = true
     foundweps = 0

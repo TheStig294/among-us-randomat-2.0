@@ -118,8 +118,8 @@ function EVENT:Begin()
     util.AddNetworkString("AmongUsMeetingCheck")
     util.AddNetworkString("AmongUsTaskBarUpdate")
     util.AddNetworkString("AmongUsForceSound")
-    util.AddNetworkString("AmongUsDrawHalo")
-    util.AddNetworkString("AmongUsStopHalo")
+    util.AddNetworkString("AmongUsDrawSprite")
+    util.AddNetworkString("AmongUsStopSprite")
     -- Workaround to prevent the end function from being triggered before the begin function, letting know that the randomat has indeed been activated and the randomat end function is now allowed to be run
     amongusRandomat = true
     roundOver = false
@@ -140,8 +140,8 @@ function EVENT:Begin()
         end
 
         -- Modifying ttt_amongusskeld interactions through the player interacting with entities
-        local amongUsO2Press558 = false
-        local amongUsO2Press559 = false
+        local amongUsO2PressedO2 = false
+        local amongUsO2PressedAdmin = false
         local soundSpamCount = 0
 
         -- Handling sound and special map interaction
@@ -175,45 +175,50 @@ function EVENT:Begin()
                         return true
                     end
                 elseif sounddata.SoundName == "npc/overwatch/cityvoice/fcitadel_45sectosingularity.wav" then
-                    -- Adding more on-screen alerts for sabotages and a halo around the object to interact with to disable
-                    timer.Create("AmongUsSabotageMessage", 1, 3, function()
-                        PrintMessage(HUD_PRINTCENTER, "The reactor is melting down in 45 seconds! \nStand at the two buttons in Reactor to fix it!")
+                    -- Adding more on-screen alerts for sabotages and a sprite around the object to interact with to disable
+                    timer.Create("AmongUsSabotageMessage", 1, 5, function()
+                        PrintMessage(HUD_PRINTCENTER, "The reactor is melting down in 45 seconds! \nStand at the two eye scanners in Reactor to fix it!")
                     end)
+
+                    net.Start("AmongUsDrawSprite")
+                    net.WriteString("reactor")
+                    net.Broadcast()
 
                     return false
                 elseif sounddata.SoundName == "npc/overwatch/cityvoice/fprison_nonstandardexogen.wav" then
-                    timer.Create("AmongUsSabotageMessage", 1, 3, function()
+                    timer.Create("AmongUsSabotageMessage", 1, 5, function()
                         PrintMessage(HUD_PRINTCENTER, "O2 will be depleted in 30 seconds! \nPress the keypads in O2 and Admin to fix it!")
                     end)
 
-                    net.Start("AmongUsDrawHalo")
+                    net.Start("AmongUsDrawSprite")
                     net.WriteString("o2")
                     net.Broadcast()
-                    amongUsO2Press558 = false
-                    amongUsO2Press559 = false
+                    -- Resetting whether the O2 keypads have been pressed or not
+                    amongUsO2PressedO2 = false
+                    amongUsO2PressedAdmin = false
 
                     return false
                 elseif sounddata.SoundName == "npc/overwatch/cityvoice/fprison_detectionsystemsout.wav" then
-                    timer.Create("AmongUsSabotageMessage", 1, 3, function()
+                    timer.Create("AmongUsSabotageMessage", 1, 5, function()
                         PrintMessage(HUD_PRINTCENTER, "Tasks are hidden! \nPress the radio in Communications to fix it!")
                     end)
 
                     SetGlobalBool("AmongUsGunWinRemove", true)
-                    net.Start("AmongUsDrawHalo")
+                    net.Start("AmongUsDrawSprite")
                     net.WriteString("comms")
                     net.Broadcast()
 
                     return false
                 elseif sounddata.SoundName == "ambient/machines/thumper_shutdown1.wav" then
-                    timer.Create("AmongUsSabotageMessage", 1, 3, function()
+                    timer.Create("AmongUsSabotageMessage", 1, 5, function()
                         PrintMessage(HUD_PRINTCENTER, "Lights are out! \nPress the power box in Electrical to fix it!")
                     end)
 
-                    net.Start("AmongUsDrawHalo")
+                    net.Start("AmongUsDrawSprite")
                     net.WriteString("lights")
                     net.Broadcast()
                 elseif sounddata.SoundName == "ambient/machines/thumper_startup1.wav" then
-                    net.Start("AmongUsStopHalo")
+                    net.Start("AmongUsStopSprite")
                     net.WriteString("lights")
                     net.Broadcast()
                 else
@@ -223,40 +228,52 @@ function EVENT:Begin()
             end
         end)
 
-        self:AddHook("FindUseEntity", function(ply, defaultEnt)
-            if defaultEnt == Entity(175) and ply:GetNWBool("AmongUsPressedEmergencyButton", true) == false then
-                emergencyButtonTriggerCount = emergencyButtonTriggerCount + 1
+        local emergencyMeetingButtonPos = Vector(-473.000000, -91.000000, 96.000000)
+        local o2ButtonPosO2 = Vector(134.000000, -770.500000, 89.000000)
+        local o2ButtonPosAdmin = Vector(113.000000, -493.500000, 80.000000)
+        local commsButtonPos = Vector(-39.000000, -1548.000000, 78.500000)
 
-                if emergencyButtonTriggerCount == 1 then
-                    ply:SetNWBool("AmongUsPressedEmergencyButton", true)
-                    net.Start("AmongUsForceSound")
-                    net.WriteString("amongus/emergencymeeting.mp3")
-                    net.Broadcast()
-                    self:AmongUsVote(ply:Nick(), true)
+        self:AddHook("PlayerUse", function(ply, ent)
+            if not IsValid(ent) then return end
+            if ent:GetClass() ~= "func_button" then return end
+            local entPos = ent:GetPos()
+
+            if entPos == emergencyMeetingButtonPos and not ply:GetNWBool("AmongUsPressedEmergencyButton", true) then
+                if ply:GetNWBool("AmongUsPressedEmergencyButton", true) then
+                    ply:PrintMessage(HUD_PRINTCENTER, "No emergency meetings left!")
+                else
+                    -- Preventing multiple emergency meetings from being called at once, since this hook is called multiple times
+                    emergencyButtonTriggerCount = emergencyButtonTriggerCount + 1
+
+                    if emergencyButtonTriggerCount == 1 then
+                        ply:SetNWBool("AmongUsPressedEmergencyButton", true)
+                        net.Start("AmongUsForceSound")
+                        net.WriteString("amongus/emergencymeeting.mp3")
+                        net.Broadcast()
+                        self:AmongUsVote(ply:Nick(), true)
+                    end
                 end
-            elseif defaultEnt == Entity(558) then
-                amongUsO2Press558 = true
+            elseif entPos == o2ButtonPosO2 then
+                amongUsO2PressedO2 = true
 
-                if amongUsO2Press559 == true then
-                    net.Start("AmongUsStopHalo")
+                if amongUsO2PressedAdmin == true then
+                    net.Start("AmongUsStopSprite")
                     net.WriteString("o2")
                     net.Broadcast()
                 end
-            elseif defaultEnt == Entity(559) then
-                amongUsO2Press559 = true
+            elseif entPos == o2ButtonPosAdmin then
+                amongUsO2PressedAdmin = true
 
-                if amongUsO2Press558 == true then
-                    net.Start("AmongUsStopHalo")
+                if amongUsO2PressedO2 == true then
+                    net.Start("AmongUsStopSprite")
                     net.WriteString("o2")
                     net.Broadcast()
                 end
-            elseif defaultEnt == Entity(566) then
+            elseif entPos == commsButtonPos then
                 SetGlobalBool("AmongUsGunWinRemove", false)
-                net.Start("AmongUsStopHalo")
+                net.Start("AmongUsStopSprite")
                 net.WriteString("comms")
                 net.Broadcast()
-            elseif defaultEnt == Entity(175) and ply:GetNWBool("AmongUsPressedEmergencyButton", true) then
-                ply:ChatPrint("You have used your emergency meeting")
             end
         end)
     else
