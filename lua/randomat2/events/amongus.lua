@@ -112,9 +112,10 @@ if amongUsMap then
     local prepTime = GetConVar("ttt_preptime_seconds"):GetInt()
     local postTime = GetConVar("ttt_posttime_seconds"):GetInt()
 
-    hook.Add("InitPostEntity", "AmongUsMapSetConvars", function()
+    hook.Add("TTTPrepareRound", "AmongUsMapSetConvars", function()
         GetConVar("ttt_preptime_seconds"):SetInt(1)
         GetConVar("ttt_posttime_seconds"):SetInt(prepTime + postTime)
+        hook.Remove("TTTPrepareRound", "AmongUsMapSetConvars")
     end)
 
     -- After the map changes, or the server shuts down, set the round time back to what it was
