@@ -550,7 +550,7 @@ function EVENT:Begin()
 
     local playTimeCount = 0
 
-    -- Adding 2 custom win conditions
+    -- Adding serveral custom win conditions
     self:AddHook("TTTCheckForWin", function()
         -- Counting the number of alive traitors and innocents
         local alivePlayers = self:GetAlivePlayers()
@@ -581,7 +581,7 @@ function EVENT:Begin()
 
                 return WIN_INNOCENT
             end
-            -- If on Among Us map, win when all tasks are complete, comms aren't down and tasks weren't completed too quickly
+            -- If on Among Us map, when all tasks are complete, comms aren't down and tasks weren't completed too quickly, innocents win
         elseif amongUsMap and weaponsFound >= wepspawns and not GetGlobalBool("AmongUsGunWinRemove") and not GetGlobalBool("AmongUsTasksTooFast") then
             if playTimeCount <= GetConVar("randomat_amongus_task_threshhold"):GetInt() then
                 SetGlobalBool("AmongUsTasksTooFast", true)
@@ -607,6 +607,7 @@ function EVENT:Begin()
 
             return WIN_TRAITOR
         elseif numAliveTraitors == 0 then
+            -- If all traitors are dead, innocents win
             timer.Simple(0.5, function()
                 net.Start("AmongUsForceSound")
                 net.WriteString("amongus/crewmatewin.mp3")
@@ -615,6 +616,7 @@ function EVENT:Begin()
 
             return WIN_INNOCENT
         elseif o2SabotageWin then
+            -- If the time runs out to fix O2, traitors win
             timer.Simple(0.5, function()
                 PrintMessage(HUD_PRINTTALK, "The traitors sabotaged O2!\nTraitors win!")
                 net.Start("AmongUsForceSound")
@@ -624,6 +626,7 @@ function EVENT:Begin()
 
             return WIN_TRAITOR
         elseif reactorSabotageWin then
+            -- If time runs out to fix the reactor, traitors win
             timer.Simple(0.5, function()
                 PrintMessage(HUD_PRINTTALK, "The traitors sabotaged the Reactor!\nTraitors win!")
                 net.Start("AmongUsForceSound")
