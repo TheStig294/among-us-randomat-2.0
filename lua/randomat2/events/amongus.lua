@@ -62,6 +62,9 @@ local secondsPassedVoting = 0
 local numaliveplayers = 0
 local meetingActiveTimeLeft = 0
 local traitorCount = 0
+local o2SabotagePressedO2 = false
+local o2SabotagePressedAdmin = false
+local o2SabotageWin = false
 
 local dripMusic = {Sound("amongus/dripmusic1.mp3"), Sound("amongus/dripmusic2.mp3"), Sound("amongus/dripmusic3.mp3")}
 
@@ -87,6 +90,10 @@ if amongUsMap then
 
     hook.Add("TTTPrepareRound", "AmongUsCheckAutoTrigger", function()
         autoTrigger = GetConVar("randomat_amongus_auto_trigger"):GetBool()
+
+        for _, ent in ipairs(ents.FindByClass("ttt_win")) do
+            ent:Remove()
+        end
     end)
 
     hook.Add("TTTBeginRound", "AmongUsMapAutoTrigger", function()
@@ -136,6 +143,8 @@ function EVENT:Begin()
     util.AddNetworkString("AmongUsForceSound")
     util.AddNetworkString("AmongUsDrawSprite")
     util.AddNetworkString("AmongUsStopSprite")
+    util.AddNetworkString("AmongUsAlarm")
+    util.AddNetworkString("AmongUsAlarmStop")
     -- Workaround to prevent the end function from being triggered before the begin function, letting know that the randomat has indeed been activated and the randomat end function is now allowed to be run
     amongusRandomat = true
     roundOver = false
@@ -156,8 +165,6 @@ function EVENT:Begin()
         end
 
         -- Modifying ttt_amongusskeld interactions through the player interacting with entities
-        local amongUsO2PressedO2 = false
-        local amongUsO2PressedAdmin = false
         local soundSpamCount = 0
 
         -- Handling sound and special map interaction
@@ -165,12 +172,7 @@ function EVENT:Begin()
             -- Not muting among us sounds, traitor button sound or a sound from ttt_amongusskeld
             if not (string.StartWith(sounddata.SoundName, "amongus") or sounddata.SoundName == "buttons/button14.wav") then
                 -- Altering ttt_amongusskeld map's sounds and interactions
-                if sounddata.SoundName == "ambient/alarms/alarm_citizen_loop1.wav" then
-                    sounddata.SoundName = "amongus/alarmloop.wav"
-                    sounddata.Volume = 1
-
-                    return true
-                elseif sounddata.SoundName == "plats/elevbell1.wav" then
+                if sounddata.SoundName == "plats/elevbell1.wav" then
                     -- Updating the taskbar on completing an in-map task
                     soundSpamCount = soundSpamCount + 1
 
@@ -206,12 +208,19 @@ function EVENT:Begin()
                         PrintMessage(HUD_PRINTCENTER, "O2 will be depleted in 30 seconds! \nPress the keypads in O2 and Admin to fix it!")
                     end)
 
+                    net.Start("AmongUsAlarm")
+                    net.Broadcast()
+
+                    timer.Create("AmongUsSabotageO2", 30, 1, function()
+                        o2SabotageWin = true
+                    end)
+
                     net.Start("AmongUsDrawSprite")
                     net.WriteString("o2")
                     net.Broadcast()
                     -- Resetting whether the O2 keypads have been pressed or not
-                    amongUsO2PressedO2 = false
-                    amongUsO2PressedAdmin = false
+                    o2SabotagePressedO2 = false
+                    o2SabotagePressedAdmin = false
 
                     return false
                 elseif sounddata.SoundName == "npc/overwatch/cityvoice/fprison_detectionsystemsout.wav" then
@@ -270,19 +279,25 @@ function EVENT:Begin()
                     end
                 end
             elseif entPos == o2ButtonPosO2 then
-                amongUsO2PressedO2 = true
+                o2SabotagePressedO2 = true
+                net.Start("AmongUsStopSprite")
+                net.WriteString("o2O2")
+                net.Broadcast()
 
-                if amongUsO2PressedAdmin == true then
-                    net.Start("AmongUsStopSprite")
-                    net.WriteString("o2")
+                if o2SabotagePressedAdmin then
+                    timer.Remove("AmongUsSabotageO2")
+                    net.Start("AmongUsAlarmStop")
                     net.Broadcast()
                 end
             elseif entPos == o2ButtonPosAdmin then
-                amongUsO2PressedAdmin = true
+                o2SabotagePressedAdmin = true
+                net.Start("AmongUsStopSprite")
+                net.WriteString("o2Admin")
+                net.Broadcast()
 
-                if amongUsO2PressedO2 == true then
-                    net.Start("AmongUsStopSprite")
-                    net.WriteString("o2")
+                if o2SabotagePressedO2 then
+                    timer.Remove("AmongUsSabotageO2")
+                    net.Start("AmongUsAlarmStop")
                     net.Broadcast()
                 end
             elseif entPos == commsButtonPos then
@@ -551,7 +566,7 @@ function EVENT:Begin()
         elseif numAliveInnocents <= numAliveTraitors then
             -- If there are as many traitors as innocents, traitors win
             timer.Simple(0.5, function()
-                PrintMessage(HUD_PRINTTALK, "In Among Us,\nTraitors win when there are as many innocents as traitors alive")
+                PrintMessage(HUD_PRINTTALK, "In Among Us, traitors win when\nthere are as many innocents as traitors alive")
                 net.Start("AmongUsForceSound")
                 net.WriteString("amongus/impostorwin.mp3")
                 net.Broadcast()
@@ -566,8 +581,15 @@ function EVENT:Begin()
             end)
 
             return WIN_INNOCENT
-        elseif amongUsMap then
-            return WIN_NONE
+        elseif o2SabotageWin then
+            timer.Simple(0.5, function()
+                PrintMessage(HUD_PRINTTALK, "The traitors sabotaged O2!\nTraitors win!")
+                net.Start("AmongUsForceSound")
+                net.WriteString("amongus/impostorwin.mp3")
+                net.Broadcast()
+            end)
+
+            return WIN_TRAITOR
         end
     end)
 
@@ -757,6 +779,10 @@ function EVENT:AmongUsVote(findername, emergencyMeeting)
 
     if timer.Exists("AmongUsPlayTimer") then
         timer.Pause("AmongUsPlayTimer")
+    end
+
+    if timer.Exists("AmongUsSabotageO2") then
+        timer.Pause("AmongUsSabotageO2")
     end
 
     -- Updating everyone's taskbar if only update during meetings is enabled
@@ -980,6 +1006,10 @@ function EVENT:AmongUsVoteEnd()
         timer.UnPause("AmongUsPlayTimer")
     end
 
+    if timer.Exists("AmongUsSabotageO2") then
+        timer.UnPause("AmongUsSabotageO2")
+    end
+
     for _, ply in pairs(self:GetAlivePlayers()) do
         -- Remind players of the emergency meeting keybind in chat after the vote is over
         net.Start("AmongUsEmergencyMeetingBind")
@@ -1043,6 +1073,9 @@ function EVENT:End()
         meetingActive = false
         emergencyButtonTriggerCount = 0
         traitorCount = 0
+        o2SabotagePressedO2 = false
+        o2SabotagePressedAdmin = false
+        o2SabotageWin = false
 
         -- Resetting player propterites
         for _, ply in pairs(player.GetAll()) do
@@ -1067,6 +1100,7 @@ function EVENT:End()
         timer.Remove("AmongUsPlayTimer")
         timer.Remove("AmongUsEmergencyMeetingTimer")
         timer.Remove("AmongUsTotalWeaponDecrease")
+        timer.Remove("AmongUsSabotageO2")
         RunConsoleCommand("phys_timescale", "1")
         RunConsoleCommand("ragdoll_sleepaftertime", "1")
         -- Close the vote window if it is open

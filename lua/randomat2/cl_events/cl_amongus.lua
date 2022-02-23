@@ -21,6 +21,17 @@ net.Receive("AmongUsSqulech", function()
     surface.PlaySound("amongus/squlech.mp3")
 end)
 
+-- Plays the alarm noise on demand
+net.Receive("AmongUsAlarm", function()
+    timer.Create("AmongUsPlayAlarmSound", 2, 0, function()
+        surface.PlaySound("amongus/alarmloop.mp3")
+    end)
+end)
+
+net.Receive("AmongUsAlarmStop", function()
+    timer.Remove("AmongUsPlayAlarmSound")
+end)
+
 -- A pop-up message reminder to players that still have emergency meetings left
 net.Receive("AmongUsEmergencyMeetingBind", function()
     local ply = LocalPlayer()
@@ -198,6 +209,10 @@ end)
 
 -- Handling player voting, most notably, drawing the voting window
 net.Receive("AmongUsVoteBegin", function()
+    if timer.Exists("AmongUsPlayAlarmSound") then
+        timer.Pause("AmongUsPlayAlarmSound")
+    end
+
     voteFrameDrawn = true
     -- Frame Setup
     votingFrame = vgui.Create("DFrame")
@@ -252,6 +267,10 @@ end)
 
 -- Removing the voting window when a vote is over and letting everyone's client know an emergency meeting can be called again
 net.Receive("AmongUsVoteEnd", function()
+    if timer.Exists("AmongUsPlayAlarmSound") then
+        timer.UnPause("AmongUsPlayAlarmSound")
+    end
+
     if voteFrameDrawn then
         votingFrame:Close()
         voteFrameDrawn = false
@@ -422,10 +441,16 @@ net.Receive("AmongUsDrawSprite", function()
             cam.End3D()
         end)
     elseif entity == "o2" then
-        hook.Add("HUDPaint", "AmongUsSpriteO2", function()
+        hook.Add("HUDPaint", "AmongUsSpriteO2O2", function()
             cam.Start3D()
             render.SetMaterial(spriteMaterial)
             render.DrawSprite(o2ButtonPosO2, 16, 16, color)
+            cam.End3D()
+        end)
+
+        hook.Add("HUDPaint", "AmongUsSpriteO2Admin", function()
+            cam.Start3D()
+            render.SetMaterial(spriteMaterial)
             render.DrawSprite(o2ButtonPosAdmin, 16, 16, color)
             cam.End3D()
         end)
@@ -451,8 +476,10 @@ net.Receive("AmongUsStopSprite", function()
 
     if entity == "reactor" then
         hook.Remove("HUDPaint", "AmongUsSpriteReactor")
-    elseif entity == "o2" then
-        hook.Remove("HUDPaint", "AmongUsSpriteO2")
+    elseif entity == "o2O2" then
+        hook.Remove("HUDPaint", "AmongUsSpriteO2O2")
+    elseif entity == "o2Admin" then
+        hook.Remove("HUDPaint", "AmongUsSpriteO2Admin")
     elseif entity == "comms" then
         hook.Remove("HUDPaint", "AmongUsSpriteComms")
     elseif entity == "lights" then
@@ -462,13 +489,15 @@ end)
 
 -- Removing all hooks are resetting all variables needed to reset at the end of the round
 net.Receive("AmongUsEventRoundEnd", function()
+    timer.Remove("AmongUsPlayAlarmSound")
     hook.Remove("PlayerBindPress", "AmongUsRandomatBuyMenuDisable")
     hook.Remove("SetupWorldFog", "AmongUsWorldFog")
     hook.Remove("SetupSkyboxFog", "AmongUsSkyboxFog")
     hook.Remove("DrawOverlay", "AmongUsTaskUI")
     hook.Remove("TTTPlayerSpeedModifier", "AmongUsPlayerSpeed")
     hook.Remove("HUDPaint", "AmongUsSpriteReactor")
-    hook.Remove("HUDPaint", "AmongUsSpriteO2")
+    hook.Remove("HUDPaint", "AmongUsSpriteO2O2")
+    hook.Remove("HUDPaint", "AmongUsSpriteO2Admin")
     hook.Remove("HUDPaint", "AmongUsSpriteComms")
     hook.Remove("HUDPaint", "AmongUsSpriteLights")
     emergencyMeetingCalled = false
