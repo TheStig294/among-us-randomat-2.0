@@ -584,6 +584,7 @@ function EVENT:Begin()
             else
                 -- Play the Among Us crewmate/impostor win music at the end of the round
                 timer.Simple(0.5, function()
+                    PrintMessage(HUD_PRINTTALK, "Enough guns found!\nInnocents win!")
                     net.Start("AmongUsForceSound")
                     net.WriteString("amongus/crewmatewin.mp3")
                     net.Broadcast()
@@ -599,6 +600,7 @@ function EVENT:Begin()
                 PrintMessage(HUD_PRINTTALK, "Tasks were finished too easily, win by voting out all traitors!")
             else
                 timer.Simple(0.5, function()
+                    PrintMessage(HUD_PRINTTALK, "All tasks complete!\nInnocents win!")
                     net.Start("AmongUsForceSound")
                     net.WriteString("amongus/crewmatewin.mp3")
                     net.Broadcast()
@@ -609,7 +611,7 @@ function EVENT:Begin()
         elseif numAliveInnocents <= numAliveTraitors then
             -- If there are as many traitors as innocents, traitors win
             timer.Simple(0.5, function()
-                PrintMessage(HUD_PRINTTALK, "In Among Us, traitors win when\nthere are as many innocents as traitors alive")
+                PrintMessage(HUD_PRINTTALK, "Equal no. of innocents/traitors!\nTraitors win!")
                 net.Start("AmongUsForceSound")
                 net.WriteString("amongus/impostorwin.mp3")
                 net.Broadcast()
@@ -619,6 +621,7 @@ function EVENT:Begin()
         elseif numAliveTraitors == 0 then
             -- If all traitors are dead, innocents win
             timer.Simple(0.5, function()
+                PrintMessage(HUD_PRINTTALK, "All traitors dead!\nInnocents win!")
                 net.Start("AmongUsForceSound")
                 net.WriteString("amongus/crewmatewin.mp3")
                 net.Broadcast()
@@ -628,7 +631,7 @@ function EVENT:Begin()
         elseif o2SabotageWin then
             -- If the time runs out to fix O2, traitors win
             timer.Simple(0.5, function()
-                PrintMessage(HUD_PRINTTALK, "The traitors sabotaged O2!\nTraitors win!")
+                PrintMessage(HUD_PRINTTALK, "Out of time to fix O2!\nTraitors win!")
                 net.Start("AmongUsForceSound")
                 net.WriteString("amongus/impostorwin.mp3")
                 net.Broadcast()
@@ -638,7 +641,7 @@ function EVENT:Begin()
         elseif reactorSabotageWin then
             -- If time runs out to fix the reactor, traitors win
             timer.Simple(0.5, function()
-                PrintMessage(HUD_PRINTTALK, "The traitors sabotaged the Reactor!\nTraitors win!")
+                PrintMessage(HUD_PRINTTALK, "Out of time to fix Reactor!\nTraitors win!")
                 net.Start("AmongUsForceSound")
                 net.WriteString("amongus/impostorwin.mp3")
                 net.Broadcast()
