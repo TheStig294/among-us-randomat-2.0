@@ -209,10 +209,6 @@ end)
 
 -- Handling player voting, most notably, drawing the voting window
 net.Receive("AmongUsVoteBegin", function()
-    if timer.Exists("AmongUsPlayAlarmSound") then
-        timer.Pause("AmongUsPlayAlarmSound")
-    end
-
     voteFrameDrawn = true
     -- Frame Setup
     votingFrame = vgui.Create("DFrame")
@@ -350,6 +346,10 @@ end)
 
 -- The "Body Reported!" popup
 net.Receive("AmongUsBodyReportedPopup", function()
+    if timer.Exists("AmongUsPlayAlarmSound") then
+        timer.Pause("AmongUsPlayAlarmSound")
+    end
+
     RunConsoleCommand("stopsound")
 
     timer.Simple(0.1, function()
@@ -379,6 +379,10 @@ end)
 
 -- The emergency meeting popup
 net.Receive("AmongUsEmergencyMeetingPopup", function()
+    if timer.Exists("AmongUsPlayAlarmSound") then
+        timer.Pause("AmongUsPlayAlarmSound")
+    end
+
     RunConsoleCommand("stopsound")
 
     timer.Simple(0.1, function()

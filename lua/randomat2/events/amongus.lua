@@ -65,6 +65,7 @@ local traitorCount = 0
 local o2SabotagePressedO2 = false
 local o2SabotagePressedAdmin = false
 local o2SabotageWin = false
+local reactorSabotageWin = false
 
 local dripMusic = {Sound("amongus/dripmusic1.mp3"), Sound("amongus/dripmusic2.mp3"), Sound("amongus/dripmusic3.mp3")}
 
@@ -196,6 +197,41 @@ function EVENT:Begin()
                     -- Adding more on-screen alerts for sabotages and a sprite around the object to interact with to disable
                     timer.Create("AmongUsSabotageMessage", 1, 5, function()
                         PrintMessage(HUD_PRINTCENTER, "The reactor is melting down in 45 seconds! \nStand at the two eye scanners in Reactor to fix it!")
+                    end)
+
+                    net.Start("AmongUsAlarm")
+                    net.Broadcast()
+
+                    timer.Create("AmongUsSabotageReactor", 1, 45, function()
+                        local playerAtNorthScanner = false
+                        local playerAtSouthScanner = false
+
+                        for _, ent in ipairs(ents.FindInSphere(Vector(-1942.242554, -252.031250, 34.031250), 25)) do
+                            if IsPlayer(ent) then
+                                playerAtNorthScanner = true
+                                break
+                            end
+                        end
+
+                        for _, ent in ipairs(ents.FindInSphere(Vector(-1941.859131, -967.968750, 34.031250), 25)) do
+                            if IsPlayer(ent) then
+                                playerAtSouthScanner = true
+                                break
+                            end
+                        end
+
+                        if playerAtNorthScanner and playerAtSouthScanner then
+                            net.Start("AmongUsAlarmStop")
+                            net.Broadcast()
+                            net.Start("AmongUsStopSprite")
+                            net.WriteString("reactor")
+                            net.Broadcast()
+                            timer.Remove("AmongUsSabotageReactor")
+                        end
+
+                        if timer.RepsLeft("AmongUsSabotageReactor") == 0 then
+                            reactorSabotageWin = true
+                        end
                     end)
 
                     net.Start("AmongUsDrawSprite")
@@ -370,7 +406,6 @@ function EVENT:Begin()
             timer.Simple(5, function()
                 ply:Give("weapon_ttt_impostor_knife_randomat")
                 ply:SelectWeapon("weapon_ttt_impostor_knife_randomat")
-                ply:ChatPrint("No-one can see you holding the knife")
             end)
         else
             Randomat:SetRole(ply, ROLE_INNOCENT)
@@ -439,7 +474,6 @@ function EVENT:Begin()
             local cooldown = GetConVar("randomat_amongus_knife_cooldown"):GetInt()
             -- Message on screen and in chat on killing someone and playing the kill squlelch sound
             attacker:PrintMessage(HUD_PRINTCENTER, "Knife is on cooldown for " .. cooldown .. " second(s).")
-            attacker:ChatPrint("Knife is on cooldown for " .. cooldown .. " second(s).")
             net.Start("AmongUsSqulech")
             net.Send(attacker)
 
@@ -461,7 +495,6 @@ function EVENT:Begin()
                     attacker:Give("weapon_ttt_impostor_knife_randomat")
                     attacker:SelectWeapon("weapon_ttt_impostor_knife_randomat")
                     attacker:PrintMessage(HUD_PRINTCENTER, "No-one can see you holding the knife")
-                    attacker:ChatPrint("No-one can see you holding the knife")
                 end
             end)
         end
@@ -584,6 +617,15 @@ function EVENT:Begin()
         elseif o2SabotageWin then
             timer.Simple(0.5, function()
                 PrintMessage(HUD_PRINTTALK, "The traitors sabotaged O2!\nTraitors win!")
+                net.Start("AmongUsForceSound")
+                net.WriteString("amongus/impostorwin.mp3")
+                net.Broadcast()
+            end)
+
+            return WIN_TRAITOR
+        elseif reactorSabotageWin then
+            timer.Simple(0.5, function()
+                PrintMessage(HUD_PRINTTALK, "The traitors sabotaged the Reactor!\nTraitors win!")
                 net.Start("AmongUsForceSound")
                 net.WriteString("amongus/impostorwin.mp3")
                 net.Broadcast()
@@ -783,6 +825,10 @@ function EVENT:AmongUsVote(findername, emergencyMeeting)
 
     if timer.Exists("AmongUsSabotageO2") then
         timer.Pause("AmongUsSabotageO2")
+    end
+
+    if timer.Exists("AmongUsSabotageReactor") then
+        timer.Pause("AmongUsSabotageReactor")
     end
 
     -- Updating everyone's taskbar if only update during meetings is enabled
@@ -1010,6 +1056,10 @@ function EVENT:AmongUsVoteEnd()
         timer.UnPause("AmongUsSabotageO2")
     end
 
+    if timer.Exists("AmongUsSabotageReactor") then
+        timer.UnPause("AmongUsSabotageReactor")
+    end
+
     for _, ply in pairs(self:GetAlivePlayers()) do
         -- Remind players of the emergency meeting keybind in chat after the vote is over
         net.Start("AmongUsEmergencyMeetingBind")
@@ -1076,6 +1126,7 @@ function EVENT:End()
         o2SabotagePressedO2 = false
         o2SabotagePressedAdmin = false
         o2SabotageWin = false
+        reactorSabotageWin = false
 
         -- Resetting player propterites
         for _, ply in pairs(player.GetAll()) do
@@ -1101,6 +1152,7 @@ function EVENT:End()
         timer.Remove("AmongUsEmergencyMeetingTimer")
         timer.Remove("AmongUsTotalWeaponDecrease")
         timer.Remove("AmongUsSabotageO2")
+        timer.Remove("AmongUsSabotageReactor")
         RunConsoleCommand("phys_timescale", "1")
         RunConsoleCommand("ragdoll_sleepaftertime", "1")
         -- Close the vote window if it is open
