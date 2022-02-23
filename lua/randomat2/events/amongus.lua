@@ -195,9 +195,13 @@ function EVENT:Begin()
                         return true
                     end
                 elseif sounddata.SoundName == "npc/overwatch/cityvoice/fcitadel_45sectosingularity.wav" then
-                    -- Adding more on-screen alerts for sabotages and a sprite around the object to interact with to disable
+                    -- Adding on-screen alert for sabotage
                     timer.Create("AmongUsSabotageMessage", 1, 5, function()
-                        PrintMessage(HUD_PRINTCENTER, "The reactor is melting down in 45 seconds! \nStand at the two eye scanners in Reactor to fix it!")
+                        for _, ply in ipairs(player.GetAll()) do
+                            if ply:GetRole() ~= ROLE_TRAITOR then
+                                ply:PrintMessage(HUD_PRINTCENTER, "The reactor is melting down in 45 seconds! \nStand at the two eye scanners in Reactor to fix it!")
+                            end
+                        end
                     end)
 
                     net.Start("AmongUsAlarm")
@@ -235,6 +239,7 @@ function EVENT:Begin()
                         end
                     end)
 
+                    -- Adding sprites at objects needed to interact with to stop the sabotage to guide players
                     net.Start("AmongUsDrawSprite")
                     net.WriteString("reactor")
                     net.Broadcast()
@@ -242,7 +247,11 @@ function EVENT:Begin()
                     return false
                 elseif sounddata.SoundName == "npc/overwatch/cityvoice/fprison_nonstandardexogen.wav" then
                     timer.Create("AmongUsSabotageMessage", 1, 5, function()
-                        PrintMessage(HUD_PRINTCENTER, "O2 will be depleted in 30 seconds! \nPress the keypads in O2 and Admin to fix it!")
+                        for _, ply in ipairs(player.GetAll()) do
+                            if ply:GetRole() ~= ROLE_TRAITOR then
+                                ply:PrintMessage(HUD_PRINTCENTER, "O2 will be depleted in 30 seconds! \nPress the keypads in O2 and Admin to fix it!")
+                            end
+                        end
                     end)
 
                     net.Start("AmongUsAlarm")
