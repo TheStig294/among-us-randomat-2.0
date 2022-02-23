@@ -81,22 +81,38 @@ local auColors = {
     Lime = Color(80, 239, 57)
 }
 
--- Automatically triggering this randomat on the among us map: "ttt_amongusskeld"
 if amongUsMap then
+    -- Automatically triggering this randomat on the among us map: "ttt_amongusskeld"
     local autoTrigger = true
 
     hook.Add("TTTPrepareRound", "AmongUsCheckAutoTrigger", function()
         autoTrigger = GetConVar("randomat_amongus_auto_trigger"):GetBool()
     end)
 
-    hook.Add("TTTRandomatShouldAuto", "AmongUsMapPreventAutoRandomat", function(id, owner)
-        if autoTrigger then return false end
-    end)
-
     hook.Add("TTTBeginRound", "AmongUsMapAutoTrigger", function()
         if autoTrigger then
             Randomat:SilentTriggerEvent("amongus", player.GetAll()[1])
         end
+    end)
+
+    -- Preventing any auto-randomats from triggering
+    hook.Add("TTTRandomatShouldAuto", "AmongUsMapPreventAutoRandomat", function(id, owner)
+        if autoTrigger then return false end
+    end)
+
+    -- Setting the prep time to 1 second to prevent players from completing tasks before the round starts
+    local prepTime = GetConVar("ttt_preptime_seconds"):GetInt()
+    local postTime = GetConVar("ttt_posttime_seconds"):GetInt()
+
+    hook.Add("InitPostEntity", "AmongUsMapSetConvars", function()
+        GetConVar("ttt_preptime_seconds"):SetInt(1)
+        GetConVar("ttt_posttime_seconds"):SetInt(prepTime + postTime)
+    end)
+
+    -- After the map changes, or the server shuts down, set the round time back to what it was
+    hook.Add("ShutDown", "AmongUsMapResetConvars", function()
+        GetConVar("ttt_preptime_seconds"):SetInt(prepTime)
+        GetConVar("ttt_posttime_seconds"):SetInt(postTime)
     end)
 end
 
