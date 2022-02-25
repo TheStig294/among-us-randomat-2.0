@@ -1,6 +1,8 @@
 _This mod adds a single randomat event to TTT, which turns the round into a game of Among Us!_\
 _Most of the usual options from Among Us are below, plus a few more!_
+
 # Randomat Options
+
 _Words in italics_ are console commands. Press ` or ~ in a game of TTT to open the console and type in console commands (plus a space and a number) to change this mod’s settings. \
 \
 Alternatively, add the italic text to your server.cfg (for dedicated servers) or listenserver.cfg (for peer-to-peer servers).\
