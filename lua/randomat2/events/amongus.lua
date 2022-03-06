@@ -7,6 +7,8 @@ EVENT.AltTitle = "Among Us"
 -- Preventing this randomat from running at the same time as another that involves voting, and preventing any future randomats that involve voting from triggering
 EVENT.Type = EVENT_TYPE_VOTING
 
+EVENT.Categories = {"gamemode", "rolechange", "largeimpact"}
+
 -- Most of the usual Among Us options, plus more! (change these in the console or via the randomat ULX mod)
 CreateConVar("randomat_amongus_voting_timer", 30, {FCVAR_NOTIFY, FCVAR_ARCHIVE}, "Seconds voting time lasts", 0, 300)
 
