@@ -4,6 +4,8 @@ EVENT.Title = ""
 EVENT.id = "amongus"
 -- Giving an AltTitle to be identifiable in the ULX menu
 EVENT.AltTitle = "Among Us"
+-- Giving this randomat a description that won't show up as a randomat alert to be used wherever else a description should be displayed, e.g. the randomat ULX menu
+EVENT.ExtDescription = "Turns the game into Among Us! Innocents win by picking up enough guns."
 -- Preventing this randomat from running at the same time as another that involves voting, and preventing any future randomats that involve voting from triggering
 EVENT.Type = EVENT_TYPE_VOTING
 
