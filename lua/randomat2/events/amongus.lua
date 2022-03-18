@@ -744,21 +744,20 @@ end)
 
 -- Handle player voting
 net.Receive("AmongUsPlayerVoted", function(ln, ply)
-    local voterepeatblock = 0
+    local repeatVote = false
     local votee = net.ReadString()
     local num = 0
 
     -- Stop a player from voting again
     for k, v in pairs(playersVoted) do
         if k == ply then
-            voterepeatblock = 1
+            repeatVote = true
+            ply:PrintMessage(HUD_PRINTTALK, "You have already voted.")
         end
-
-        ply:PrintMessage(HUD_PRINTTALK, "You have already voted.")
     end
 
     -- Play the vote sound to all players, if they are not trying to vote multiple times
-    if voterepeatblock == 0 then
+    if not repeatVote then
         net.Start("AmongUsForceSound")
         net.WriteString("amongus/vote.mp3")
         net.Broadcast()
@@ -767,7 +766,7 @@ net.Receive("AmongUsPlayerVoted", function(ln, ply)
     -- Searching for the player that was voted for
     for _, v in pairs(votableplayers) do
         -- Find which player was voted for
-        if v:Nick() == votee and voterepeatblock == 0 then
+        if v:Nick() == votee and not repeatVote then
             playersVoted[ply] = v -- insert player and target into table
 
             -- Tell everyone who they voted for in chat, if enabled
@@ -785,7 +784,7 @@ net.Receive("AmongUsPlayerVoted", function(ln, ply)
     end
 
     -- If they voted to skip vote
-    if votee == "[Skip Vote]" and voterepeatblock == 0 then
+    if votee == "[Skip Vote]" and not repeatVote then
         playersVoted[ply] = "[Skip Vote]" -- insert player and target into table
 
         -- Tell everyone they voted to skip
@@ -805,13 +804,13 @@ net.Receive("AmongUsPlayerVoted", function(ln, ply)
     net.Broadcast()
 
     -- Counting the number of players voted so far, to check if voting can end early
-    if voterepeatblock == 0 then
+    if not repeatVote then
         numvoted = numvoted + 1
-    end
 
-    -- If everyone has voted, end the vote now
-    if voterepeatblock == 0 and numaliveplayers == numvoted then
-        EVENT:AmongUsVoteEnd()
+        -- If everyone has voted, end the vote now
+        if numaliveplayers == numvoted then
+            EVENT:AmongUsVoteEnd()
+        end
     end
 end)
 
