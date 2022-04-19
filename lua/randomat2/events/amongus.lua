@@ -92,12 +92,32 @@ local auColors = {
 if amongUsMap then
     -- Automatically triggering this randomat on the among us map: "ttt_amongusskeld"
     local autoTrigger = true
+    -- Setting the prep time to 1 second to prevent players from completing tasks before the round starts
+    local prepTime = GetConVar("ttt_preptime_seconds"):GetInt()
+    local postTime = GetConVar("ttt_posttime_seconds"):GetInt()
 
     hook.Add("TTTPrepareRound", "AmongUsCheckAutoTrigger", function()
         autoTrigger = GetConVar("randomat_amongus_auto_trigger"):GetBool()
 
         for _, ent in ipairs(ents.FindByClass("ttt_win")) do
             ent:Remove()
+        end
+
+        if autoTrigger then
+            local newPrepTime = 1
+            RunConsoleCommand("ttt_posttime_seconds", prepTime + postTime - newPrepTime)
+            RunConsoleCommand("ttt_preptime_seconds", newPrepTime)
+
+            -- Removes all weapons on the floor of the map at the start of every round
+            for _, ent in ipairs(ents.GetAll()) do
+                if ent.AutoSpawnable then
+                    ent:Remove()
+                end
+            end
+
+            if ConVarExists("ttt_floor_weapons_giver") then
+                RunConsoleCommand("ttt_floor_weapons_giver", 0)
+            end
         end
     end)
 
@@ -112,20 +132,14 @@ if amongUsMap then
         if autoTrigger then return false end
     end)
 
-    -- Setting the prep time to 1 second to prevent players from completing tasks before the round starts
-    local prepTime = GetConVar("ttt_preptime_seconds"):GetInt()
-    local postTime = GetConVar("ttt_posttime_seconds"):GetInt()
-
-    hook.Add("TTTPrepareRound", "AmongUsMapSetConvars", function()
-        GetConVar("ttt_preptime_seconds"):SetInt(1)
-        GetConVar("ttt_posttime_seconds"):SetInt(prepTime + postTime)
-        hook.Remove("TTTPrepareRound", "AmongUsMapSetConvars")
-    end)
-
     -- After the map changes, or the server shuts down, set the round time back to what it was
     hook.Add("ShutDown", "AmongUsMapResetConvars", function()
-        GetConVar("ttt_preptime_seconds"):SetInt(prepTime)
-        GetConVar("ttt_posttime_seconds"):SetInt(postTime)
+        RunConsoleCommand("ttt_preptime_seconds", prepTime)
+        RunConsoleCommand("ttt_posttime_seconds", postTime)
+
+        if ConVarExists("ttt_floor_weapons_giver") then
+            RunConsoleCommand("ttt_floor_weapons_giver", 1)
+        end
     end)
 end
 
