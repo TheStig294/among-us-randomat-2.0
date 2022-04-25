@@ -372,6 +372,11 @@ function EVENT:Begin()
             end
         end)
     else
+        -- Turning off the floor weapons giver mod if installed
+        if ConVarExists("ttt_floor_weapons_giver") then
+            RunConsoleCommand("ttt_floor_weapons_giver", 0)
+        end
+
         -- If not on the Among Us map,
         -- Counting the number of weapons on the map for the innocent 'task': pick up all weapons on the map to win
         for _, v in pairs(ents.GetAll()) do
@@ -1160,6 +1165,11 @@ function EVENT:End()
         o2SabotagePressedAdmin = false
         o2SabotageWin = false
         reactorSabotageWin = false
+
+        -- Turn the floor weapons giver mod back on if installed and not on the among us map as that's handled differently
+        if not amongUsMap and ConVarExists("ttt_floor_weapons_giver") then
+            RunConsoleCommand("ttt_floor_weapons_giver", 1)
+        end
 
         -- Resetting player propterites
         for _, ply in pairs(player.GetAll()) do
