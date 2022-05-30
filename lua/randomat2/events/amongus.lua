@@ -11,6 +11,28 @@ EVENT.Type = EVENT_TYPE_VOTING
 
 EVENT.Categories = {"gamemode", "rolechange", "largeimpact"}
 
+-- A lot of stuff goes between the client and server in this randomat...
+util.AddNetworkString("AmongUsVoteBegin")
+util.AddNetworkString("AmongUsVoteEnd")
+util.AddNetworkString("AmongUsPlayerVoted")
+util.AddNetworkString("AmongUsEventBegin")
+util.AddNetworkString("AmongUsEventRoundEnd")
+util.AddNetworkString("AmongUsEmergencyMeeting")
+util.AddNetworkString("AmongUsEmergencyMeetingCall")
+util.AddNetworkString("AmongUsSqulech")
+util.AddNetworkString("AmongUsShhPopup")
+util.AddNetworkString("AmongUsVictimPopup")
+util.AddNetworkString("AmongUsBodyReportedPopup")
+util.AddNetworkString("AmongUsEmergencyMeetingPopup")
+util.AddNetworkString("AmongUsEmergencyMeetingBind")
+util.AddNetworkString("AmongUsMeetingCheck")
+util.AddNetworkString("AmongUsTaskBarUpdate")
+util.AddNetworkString("AmongUsForceSound")
+util.AddNetworkString("AmongUsDrawSprite")
+util.AddNetworkString("AmongUsStopSprite")
+util.AddNetworkString("AmongUsAlarm")
+util.AddNetworkString("AmongUsAlarmStop")
+
 -- Most of the usual Among Us options, plus more! (change these in the console or via the randomat ULX mod)
 CreateConVar("randomat_amongus_voting_timer", 30, {FCVAR_NOTIFY, FCVAR_ARCHIVE}, "Seconds voting time lasts", 0, 300)
 
@@ -141,30 +163,159 @@ if amongUsMap then
             RunConsoleCommand("ttt_floor_weapons_giver", 1)
         end
     end)
+
+    hook.Add("EntityEmitSound", "AmongUsMapSabotageTriggers", function(sounddata)
+        if sounddata.SoundName == "npc/overwatch/cityvoice/fcitadel_45sectosingularity.wav" then
+            -- Adding on-screen alert for sabotage
+            timer.Create("AmongUsSabotageMessage", 1, 5, function()
+                for _, ply in ipairs(player.GetAll()) do
+                    if ply:GetRole() ~= ROLE_TRAITOR then
+                        ply:PrintMessage(HUD_PRINTCENTER, "The reactor is melting down in 45 seconds! \nStand at the two eye scanners in Reactor to fix it!")
+                    end
+                end
+            end)
+
+            timer.Create("AmongUsSabotageReactor", 1, 45, function()
+                local playerAtNorthScanner = false
+                local playerAtSouthScanner = false
+
+                for _, ent in ipairs(ents.FindInSphere(Vector(-1942.242554, -252.031250, 34.031250), 25)) do
+                    if IsPlayer(ent) then
+                        playerAtNorthScanner = true
+                        break
+                    end
+                end
+
+                for _, ent in ipairs(ents.FindInSphere(Vector(-1941.859131, -967.968750, 34.031250), 25)) do
+                    if IsPlayer(ent) then
+                        playerAtSouthScanner = true
+                        break
+                    end
+                end
+
+                if playerAtNorthScanner and playerAtSouthScanner then
+                    net.Start("AmongUsAlarmStop")
+                    net.Broadcast()
+                    net.Start("AmongUsStopSprite")
+                    net.WriteString("reactor")
+                    net.Broadcast()
+                    timer.Remove("AmongUsSabotageReactor")
+                end
+
+                if timer.RepsLeft("AmongUsSabotageReactor") == 0 then
+                    reactorSabotageWin = true
+                end
+            end)
+
+            -- Adding sprites at objects needed to interact with to stop the sabotage to guide players
+            net.Start("AmongUsDrawSprite")
+            net.WriteString("reactor")
+            net.Broadcast()
+
+            if not roundOver then
+                net.Start("AmongUsAlarm")
+                net.Broadcast()
+            end
+
+            return false
+        elseif sounddata.SoundName == "npc/overwatch/cityvoice/fprison_nonstandardexogen.wav" then
+            timer.Create("AmongUsSabotageMessage", 1, 5, function()
+                for _, ply in ipairs(player.GetAll()) do
+                    if ply:GetRole() ~= ROLE_TRAITOR then
+                        ply:PrintMessage(HUD_PRINTCENTER, "O2 will be depleted in 30 seconds! \nPress the keypads in O2 and Admin to fix it!")
+                    end
+                end
+            end)
+
+            net.Start("AmongUsDrawSprite")
+            net.WriteString("o2")
+            net.Broadcast()
+            -- Resetting whether the O2 keypads have been pressed or not
+            o2SabotagePressedO2 = false
+            o2SabotagePressedAdmin = false
+
+            if not roundOver then
+                net.Start("AmongUsAlarm")
+                net.Broadcast()
+
+                timer.Create("AmongUsSabotageO2", 30, 1, function()
+                    o2SabotageWin = true
+                end)
+            end
+
+            return false
+        elseif sounddata.SoundName == "npc/overwatch/cityvoice/fprison_detectionsystemsout.wav" then
+            timer.Create("AmongUsSabotageMessage", 1, 5, function()
+                PrintMessage(HUD_PRINTCENTER, "Tasks are hidden! \nPress the radio in Communications to fix it!")
+            end)
+
+            net.Start("AmongUsDrawSprite")
+            net.WriteString("comms")
+            net.Broadcast()
+            SetGlobalBool("AmongUsGunWinRemove", true)
+
+            return false
+        elseif sounddata.SoundName == "ambient/machines/thumper_shutdown1.wav" then
+            timer.Create("AmongUsSabotageMessage", 1, 5, function()
+                PrintMessage(HUD_PRINTCENTER, "Lights are out! \nPress the power box in Electrical to fix it!")
+            end)
+
+            net.Start("AmongUsDrawSprite")
+            net.WriteString("lights")
+            net.Broadcast()
+        elseif sounddata.SoundName == "ambient/machines/thumper_startup1.wav" then
+            net.Start("AmongUsStopSprite")
+            net.WriteString("lights")
+            net.Broadcast()
+        end
+    end)
+
+    local o2ButtonPosO2 = Vector(134.000000, -770.500000, 89.000000)
+    local o2ButtonPosAdmin = Vector(113.000000, -493.500000, 80.000000)
+    local commsButtonPos = Vector(-39.000000, -1548.000000, 78.500000)
+
+    hook.Add("PlayerUse", "AmongUsMapDeactivateSabotage", function(ply, ent)
+        if not IsValid(ent) then return end
+        if ent:GetClass() ~= "func_button" then return end
+        local entPos = ent:GetPos()
+
+        if entPos == o2ButtonPosO2 then
+            o2SabotagePressedO2 = true
+            net.Start("AmongUsStopSprite")
+            net.WriteString("o2O2")
+            net.Broadcast()
+
+            if o2SabotagePressedAdmin then
+                timer.Remove("AmongUsSabotageO2")
+                net.Start("AmongUsAlarmStop")
+                net.Broadcast()
+            end
+        elseif entPos == o2ButtonPosAdmin then
+            o2SabotagePressedAdmin = true
+            net.Start("AmongUsStopSprite")
+            net.WriteString("o2Admin")
+            net.Broadcast()
+
+            if o2SabotagePressedO2 then
+                timer.Remove("AmongUsSabotageO2")
+                net.Start("AmongUsAlarmStop")
+                net.Broadcast()
+            end
+        elseif entPos == commsButtonPos then
+            SetGlobalBool("AmongUsGunWinRemove", false)
+            net.Start("AmongUsStopSprite")
+            net.WriteString("comms")
+            net.Broadcast()
+        end
+    end)
+
+    hook.Add("TTTEndRound", "AmongUsMapResetRound", function()
+        net.Start("AmongUsEventRoundEnd")
+        net.Broadcast()
+    end)
 end
 
 function EVENT:Begin()
-    -- A lot of stuff goes between the client and server in this randomat...
-    util.AddNetworkString("AmongUsVoteBegin")
-    util.AddNetworkString("AmongUsVoteEnd")
-    util.AddNetworkString("AmongUsPlayerVoted")
-    util.AddNetworkString("AmongUsEventBegin")
-    util.AddNetworkString("AmongUsEventRoundEnd")
-    util.AddNetworkString("AmongUsEmergencyMeeting")
-    util.AddNetworkString("AmongUsEmergencyMeetingCall")
-    util.AddNetworkString("AmongUsSqulech")
-    util.AddNetworkString("AmongUsShhPopup")
-    util.AddNetworkString("AmongUsVictimPopup")
-    util.AddNetworkString("AmongUsBodyReportedPopup")
-    util.AddNetworkString("AmongUsEmergencyMeetingPopup")
-    util.AddNetworkString("AmongUsEmergencyMeetingBind")
-    util.AddNetworkString("AmongUsMeetingCheck")
-    util.AddNetworkString("AmongUsTaskBarUpdate")
-    util.AddNetworkString("AmongUsForceSound")
-    util.AddNetworkString("AmongUsDrawSprite")
-    util.AddNetworkString("AmongUsStopSprite")
-    util.AddNetworkString("AmongUsAlarm")
-    util.AddNetworkString("AmongUsAlarmStop")
     -- Workaround to prevent the end function from being triggered before the begin function, letting know that the randomat has indeed been activated and the randomat end function is now allowed to be run
     amongusRandomat = true
     roundOver = false
@@ -212,104 +363,6 @@ function EVENT:Begin()
 
                         return true
                     end
-                elseif sounddata.SoundName == "npc/overwatch/cityvoice/fcitadel_45sectosingularity.wav" then
-                    -- Adding on-screen alert for sabotage
-                    timer.Create("AmongUsSabotageMessage", 1, 5, function()
-                        for _, ply in ipairs(player.GetAll()) do
-                            if ply:GetRole() ~= ROLE_TRAITOR then
-                                ply:PrintMessage(HUD_PRINTCENTER, "The reactor is melting down in 45 seconds! \nStand at the two eye scanners in Reactor to fix it!")
-                            end
-                        end
-                    end)
-
-                    net.Start("AmongUsAlarm")
-                    net.Broadcast()
-
-                    timer.Create("AmongUsSabotageReactor", 1, 45, function()
-                        local playerAtNorthScanner = false
-                        local playerAtSouthScanner = false
-
-                        for _, ent in ipairs(ents.FindInSphere(Vector(-1942.242554, -252.031250, 34.031250), 25)) do
-                            if IsPlayer(ent) then
-                                playerAtNorthScanner = true
-                                break
-                            end
-                        end
-
-                        for _, ent in ipairs(ents.FindInSphere(Vector(-1941.859131, -967.968750, 34.031250), 25)) do
-                            if IsPlayer(ent) then
-                                playerAtSouthScanner = true
-                                break
-                            end
-                        end
-
-                        if playerAtNorthScanner and playerAtSouthScanner then
-                            net.Start("AmongUsAlarmStop")
-                            net.Broadcast()
-                            net.Start("AmongUsStopSprite")
-                            net.WriteString("reactor")
-                            net.Broadcast()
-                            timer.Remove("AmongUsSabotageReactor")
-                        end
-
-                        if timer.RepsLeft("AmongUsSabotageReactor") == 0 then
-                            reactorSabotageWin = true
-                        end
-                    end)
-
-                    -- Adding sprites at objects needed to interact with to stop the sabotage to guide players
-                    net.Start("AmongUsDrawSprite")
-                    net.WriteString("reactor")
-                    net.Broadcast()
-
-                    return false
-                elseif sounddata.SoundName == "npc/overwatch/cityvoice/fprison_nonstandardexogen.wav" then
-                    timer.Create("AmongUsSabotageMessage", 1, 5, function()
-                        for _, ply in ipairs(player.GetAll()) do
-                            if ply:GetRole() ~= ROLE_TRAITOR then
-                                ply:PrintMessage(HUD_PRINTCENTER, "O2 will be depleted in 30 seconds! \nPress the keypads in O2 and Admin to fix it!")
-                            end
-                        end
-                    end)
-
-                    net.Start("AmongUsAlarm")
-                    net.Broadcast()
-
-                    timer.Create("AmongUsSabotageO2", 30, 1, function()
-                        o2SabotageWin = true
-                    end)
-
-                    net.Start("AmongUsDrawSprite")
-                    net.WriteString("o2")
-                    net.Broadcast()
-                    -- Resetting whether the O2 keypads have been pressed or not
-                    o2SabotagePressedO2 = false
-                    o2SabotagePressedAdmin = false
-
-                    return false
-                elseif sounddata.SoundName == "npc/overwatch/cityvoice/fprison_detectionsystemsout.wav" then
-                    timer.Create("AmongUsSabotageMessage", 1, 5, function()
-                        PrintMessage(HUD_PRINTCENTER, "Tasks are hidden! \nPress the radio in Communications to fix it!")
-                    end)
-
-                    SetGlobalBool("AmongUsGunWinRemove", true)
-                    net.Start("AmongUsDrawSprite")
-                    net.WriteString("comms")
-                    net.Broadcast()
-
-                    return false
-                elseif sounddata.SoundName == "ambient/machines/thumper_shutdown1.wav" then
-                    timer.Create("AmongUsSabotageMessage", 1, 5, function()
-                        PrintMessage(HUD_PRINTCENTER, "Lights are out! \nPress the power box in Electrical to fix it!")
-                    end)
-
-                    net.Start("AmongUsDrawSprite")
-                    net.WriteString("lights")
-                    net.Broadcast()
-                elseif sounddata.SoundName == "ambient/machines/thumper_startup1.wav" then
-                    net.Start("AmongUsStopSprite")
-                    net.WriteString("lights")
-                    net.Broadcast()
                 else
                     -- Mute all other sounds
                     return false
@@ -318,16 +371,12 @@ function EVENT:Begin()
         end)
 
         local emergencyMeetingButtonPos = Vector(-473.000000, -91.000000, 96.000000)
-        local o2ButtonPosO2 = Vector(134.000000, -770.500000, 89.000000)
-        local o2ButtonPosAdmin = Vector(113.000000, -493.500000, 80.000000)
-        local commsButtonPos = Vector(-39.000000, -1548.000000, 78.500000)
 
         self:AddHook("PlayerUse", function(ply, ent)
             if not IsValid(ent) then return end
             if ent:GetClass() ~= "func_button" then return end
-            local entPos = ent:GetPos()
 
-            if entPos == emergencyMeetingButtonPos and not ply:GetNWBool("AmongUsPressedEmergencyButton", true) then
+            if ent:GetPos() == emergencyMeetingButtonPos and not ply:GetNWBool("AmongUsPressedEmergencyButton", true) then
                 if ply:GetNWBool("AmongUsPressedEmergencyButton", true) then
                     ply:PrintMessage(HUD_PRINTCENTER, "No emergency meetings left!")
                 else
@@ -342,33 +391,6 @@ function EVENT:Begin()
                         self:AmongUsVote(ply:Nick(), true)
                     end
                 end
-            elseif entPos == o2ButtonPosO2 then
-                o2SabotagePressedO2 = true
-                net.Start("AmongUsStopSprite")
-                net.WriteString("o2O2")
-                net.Broadcast()
-
-                if o2SabotagePressedAdmin then
-                    timer.Remove("AmongUsSabotageO2")
-                    net.Start("AmongUsAlarmStop")
-                    net.Broadcast()
-                end
-            elseif entPos == o2ButtonPosAdmin then
-                o2SabotagePressedAdmin = true
-                net.Start("AmongUsStopSprite")
-                net.WriteString("o2Admin")
-                net.Broadcast()
-
-                if o2SabotagePressedO2 then
-                    timer.Remove("AmongUsSabotageO2")
-                    net.Start("AmongUsAlarmStop")
-                    net.Broadcast()
-                end
-            elseif entPos == commsButtonPos then
-                SetGlobalBool("AmongUsGunWinRemove", false)
-                net.Start("AmongUsStopSprite")
-                net.WriteString("comms")
-                net.Broadcast()
             end
         end)
     else
