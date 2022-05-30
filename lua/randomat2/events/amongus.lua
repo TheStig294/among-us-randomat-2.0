@@ -405,6 +405,17 @@ function EVENT:Begin()
         self:AddHook("EntityEmitSound", function(sounddata)
             if not string.StartWith(sounddata.SoundName, "amongus") then return false end
         end)
+
+        -- Let the player pick up weapons and nades and count them toward the number found, if all are found innocents win (replacement for Among Us tasks)
+        self:AddHook("WeaponEquip", function(wep, ply)
+            if wep.AutoSpawnable then
+                weaponsFound = weaponsFound + 1
+                net.Start("AmongUsTaskBarUpdate")
+                net.WriteInt(weaponsFound, 16)
+                net.Broadcast()
+                timer.Start("AmongUsTotalWeaponDecrease")
+            end
+        end)
     end
 
     -- Adding the colour table to a different table so if more than 12 people are playing, the choosable colours are able to be reset
@@ -679,18 +690,6 @@ function EVENT:Begin()
         self:AmongUsVote(finder:Nick())
     end)
 
-    -- Let the player pick up weapons and nades and count them toward the number found, if all are found innocents win (replacement for Among Us tasks)
-    self:AddHook("WeaponEquip", function(wep, ply)
-        -- Don't do this if we're playing on the special among us map
-        if not amongUsMap and wep.Kind == WEAPON_HEAVY or wep.Kind == WEAPON_PISTOL or wep.Kind == WEAPON_NADE or wep.Kind == WEAPON_NONE then
-            weaponsFound = weaponsFound + 1
-            net.Start("AmongUsTaskBarUpdate")
-            net.WriteInt(weaponsFound, 16)
-            net.Broadcast()
-            timer.Start("AmongUsTotalWeaponDecrease")
-        end
-    end)
-
     -- Scales the player speed on the server
     self:AddHook("TTTSpeedMultiplier", function(ply, mults)
         if not ply:Alive() or ply:IsSpec() then return end
@@ -937,7 +936,7 @@ function EVENT:AmongUsVote(findername, emergencyMeeting)
         if timer.RepsLeft("AmongUsDiscussionTimer") == 0 then
             -- If there is no discussion time, skip the voting has started notification
             if amongUsDiscussiontimer ~= 0 then
-                self:SmallNotify("Voting has begun, hold tab to vote.")
+                self:SmallNotify("Voting has begun, click a name to vote")
             end
 
             -- Let client know vote has started so vote window can be drawn
