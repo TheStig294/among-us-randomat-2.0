@@ -214,12 +214,19 @@ net.Receive("AmongUsVoteBegin", function()
     votingFrame = vgui.Create("DFrame")
     votingFrame:SetPos(10, ScrH() - 800)
     votingFrame:SetSize(200, 300)
-    votingFrame:SetTitle("Click a name to vote")
     votingFrame:SetDraggable(false)
     votingFrame:ShowCloseButton(false)
     votingFrame:SetVisible(true)
     votingFrame:SetDeleteOnClose(true)
-    votingFrame:MakePopup()
+
+    -- Only take mouse focus away if players are frozen, else players can't move
+    if GetGlobalBool("randomat_amongus_freeze") then
+        votingFrame:SetTitle("Click a name to vote")
+        votingFrame:MakePopup()
+    else
+        votingFrame:SetTitle("Hold TAB to vote")
+    end
+
     -- Player List
     votingList = vgui.Create("DListView", votingFrame)
     votingList:Dock(FILL)

@@ -958,7 +958,11 @@ function EVENT:AmongUsVote(findername, emergencyMeeting)
         if timer.RepsLeft("AmongUsDiscussionTimer") == 0 then
             -- If there is no discussion time, skip the voting has started notification
             if amongUsDiscussiontimer ~= 0 then
-                self:SmallNotify("Voting has begun, click a name to vote")
+                if GetConVar("randomat_amongus_freeze"):GetBool() then
+                    self:SmallNotify("Voting has begun, click a name to vote")
+                else
+                    self:SmallNotify("Voting has begun, hold TAB to vote")
+                end
             end
 
             -- Let client know vote has started so vote window can be drawn
