@@ -444,7 +444,7 @@ function EVENT:Begin()
     local remainingColors = {}
     table.Add(remainingColors, auColors)
     -- Thanks Desmos + Among Us wiki, this number of traitors ensures games do not instantly end with a double kill
-    local traitorCap = math.floor((player.GetCount() / 2) - 1.5)
+    local traitorCap = math.floor((#self:GetAlivePlayers() / 2) - 1.5)
 
     if traitorCap <= 0 then
         traitorCap = 1
