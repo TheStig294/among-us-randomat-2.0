@@ -484,7 +484,7 @@ function EVENT:Begin()
             playerColors[ply] = ply:GetPlayerColor()
             -- Sets their model to the Among Us model
             -- Sets everyone's view height to be lower as the among us playermodel is shorter than a standard playermodel
-            ForceSetPlayermodel(ply, "models/amongus/player/player.mdl", Vector(0, 0, 48), Vector(0, 0, 28))
+            Randomat:ForceSetPlayermodel(ply, "models/amongus/player/player.mdl", Vector(0, 0, 48), Vector(0, 0, 28))
 
             -- Resets the choosable colours for everyone's Among Us playermodel if none are left (happens when there are more than 12 players, as there are 12 colours to choose from)
             if remainingColors == {} then
@@ -1211,7 +1211,7 @@ function EVENT:End()
             timer.Remove("AmongUsRandomatKnifeTimer" .. ply:SteamID64())
         end
 
-        ForceResetAllPlayermodels()
+        Randomat:ForceResetAllPlayermodels()
         timer.Remove("votekilltimerAmongUs")
         timer.Remove("AmongUsDiscussionTimer")
         timer.Remove("AmongUsInnocentTask")
