@@ -108,8 +108,12 @@ net.Receive("AmongUsEventBegin", function()
 
     -- Disabling Sprinting if the convar is enabled
     if GetGlobalBool("randomat_amongus_sprinting") == false then
-        hook.Remove("Think", "TTTSprintThink")
-        hook.Remove("Think", "TTTSprint4Think")
+        hook.Add("TTTSprintStaminaPost", "AmongUsStopSprintStamina", function() return 0 end)
+
+        timer.Simple(0.1, function()
+            hook.Remove("Think", "TTTSprintThink")
+            hook.Remove("Think", "TTTSprint4Think")
+        end)
     end
 
     -- Limits the player's view distance like in among us, traitors and innocents can have differing view distances (in among us, impostors typically can see further than crewmates)
@@ -506,7 +510,7 @@ net.Receive("AmongUsEventRoundEnd", function()
     hook.Remove("SetupWorldFog", "AmongUsWorldFog")
     hook.Remove("SetupSkyboxFog", "AmongUsSkyboxFog")
     hook.Remove("DrawOverlay", "AmongUsTaskUI")
-    hook.Remove("TTTPlayerSpeedModifier", "AmongUsPlayerSpeed")
+    hook.Remove("TTTSprintStaminaPost", "AmongUsStopSprintStamina")
     hook.Remove("HUDPaint", "AmongUsSpriteReactor")
     hook.Remove("HUDPaint", "AmongUsSpriteO2O2")
     hook.Remove("HUDPaint", "AmongUsSpriteO2Admin")
