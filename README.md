@@ -52,5 +52,8 @@ Trigger every round on special map: ttt_amongusskeld\
 _randomat_amongus_task_threshhold_ - Default: 60 -\
 Seconds until tasks/guns aren't found too quickly\
 \
+_randomat_amongus_sprint_ - Default: 1 -\
+Enable sprinting during the randomat\
+\
 _randomat_amongus_music_ - Default: 1 -\
 Play the Among Us drip music

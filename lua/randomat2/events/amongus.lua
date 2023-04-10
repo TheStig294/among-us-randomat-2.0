@@ -64,7 +64,7 @@ CreateConVar("randomat_amongus_auto_trigger", 1, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, 
 
 CreateConVar("randomat_amongus_task_threshhold", 60, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Seconds until tasks/guns aren't found too quickly", 0, 120)
 
-CreateConVar("randomat_amongus_sprinting", 0, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Enable sprinting during the randomat", 0, 1)
+CreateConVar("randomat_amongus_sprint", 1, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Enable sprinting during the randomat", 0, 1)
 
 CreateConVar("randomat_amongus_music", 1, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Play the Among Us drip music", 0, 1)
 
@@ -1165,7 +1165,7 @@ function EVENT:AmongUsConVarResync()
     SetGlobalBool("randomat_amongus_taskbar_update", GetConVar("randomat_amongus_taskbar_update"):GetBool())
     SetGlobalBool("randomat_amongus_auto_trigger", GetConVar("randomat_amongus_auto_trigger"):GetBool())
     SetGlobalInt("randomat_amongus_task_threshhold", GetConVar("randomat_amongus_task_threshhold"):GetInt())
-    SetGlobalBool("randomat_amongus_sprinting", GetConVar("randomat_amongus_sprinting"):GetBool())
+    SetGlobalBool("randomat_amongus_sprint", GetConVar("randomat_amongus_sprint"):GetBool())
     SetGlobalBool("randomat_amongus_music", GetConVar("randomat_amongus_music"):GetBool())
 end
 
@@ -1272,7 +1272,7 @@ function EVENT:GetConVars()
 
     local checks = {}
 
-    for _, v in pairs({"freeze", "confirm_ejects", "anonymous_voting", "taskbar_update", "auto_trigger", "sprinting", "music"}) do
+    for _, v in pairs({"freeze", "confirm_ejects", "anonymous_voting", "taskbar_update", "auto_trigger", "sprint", "music"}) do
         local name = "randomat_" .. self.id .. "_" .. v
 
         if ConVarExists(name) then

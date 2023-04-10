@@ -99,7 +99,7 @@ net.Receive("AmongUsEventBegin", function()
             end
 
             return true
-        elseif string.find(bind, "+speed") and GetGlobalBool("randomat_amongus_sprinting") == false then
+        elseif string.find(bind, "+speed") and GetGlobalBool("randomat_amongus_sprint") == false then
             ply:PrintMessage(HUD_PRINTCENTER, "Sprinting is disabled")
 
             return true
@@ -107,7 +107,7 @@ net.Receive("AmongUsEventBegin", function()
     end)
 
     -- Disabling Sprinting if the convar is enabled
-    if GetGlobalBool("randomat_amongus_sprinting") == false then
+    if GetGlobalBool("randomat_amongus_sprint") == false then
         hook.Add("TTTSprintStaminaPost", "AmongUsStopSprintStamina", function() return 0 end)
 
         timer.Simple(0.1, function()
@@ -203,6 +203,19 @@ net.Receive("AmongUsEventBegin", function()
                 draw.TextShadow(texttable, 2)
             end
         end)
+
+        if GetGlobalBool("randomat_amongus_music") then
+            chat.AddText("Press 'M' to mute music")
+
+            hook.Add("PlayerButtonDown", "AmongUsMuteMusicButton", function(ply, button)
+                if button == KEY_M then
+                    RunConsoleCommand("stopsound")
+                    chat.AddText("Music muted")
+                    SetGlobalBool("randomat_amongus_music", false)
+                    hook.Remove("PlayerButtonDown", "AmongUsMuteMusicButton")
+                end
+            end)
+        end
     end)
 end)
 
@@ -516,6 +529,7 @@ net.Receive("AmongUsEventRoundEnd", function()
     hook.Remove("HUDPaint", "AmongUsSpriteO2Admin")
     hook.Remove("HUDPaint", "AmongUsSpriteComms")
     hook.Remove("HUDPaint", "AmongUsSpriteLights")
+    hook.Remove("PlayerButtonDown", "AmongUsMuteMusicButton")
     emergencyMeetingCalled = false
     firstEmergencyMeetingBindMessage = true
     foundweps = 0
