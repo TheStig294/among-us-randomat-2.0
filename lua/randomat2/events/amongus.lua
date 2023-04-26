@@ -9,7 +9,7 @@ EVENT.ExtDescription = "Turns the game into Among Us! Innocents win by picking u
 -- Preventing this randomat from running at the same time as another that involves voting, and preventing any future randomats that involve voting from triggering
 EVENT.Type = EVENT_TYPE_VOTING
 
-EVENT.Categories = {"gamemode", "rolechange", "largeimpact"}
+EVENT.Categories = {"gamemode", "rolechange", "modelchange", "largeimpact"}
 
 -- A lot of stuff goes between the client and server in this randomat...
 util.AddNetworkString("AmongUsVoteBegin")
