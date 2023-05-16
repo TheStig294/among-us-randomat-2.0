@@ -64,7 +64,7 @@ CreateConVar("randomat_amongus_auto_trigger", 1, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, 
 
 CreateConVar("randomat_amongus_task_threshhold", 60, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Seconds until tasks/guns aren't found too quickly", 0, 120)
 
-CreateConVar("randomat_amongus_sprint", 1, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Enable sprinting during the randomat", 0, 1)
+local sprintingCvar = CreateConVar("randomat_amongus_sprint", 1, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Enable sprinting during the randomat", 0, 1)
 
 CreateConVar("randomat_amongus_music", 1, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Play the Among Us drip music", 0, 1)
 
@@ -92,6 +92,7 @@ local o2SabotagePressedO2 = false
 local o2SabotagePressedAdmin = false
 local o2SabotageWin = false
 local reactorSabotageWin = false
+local sprintingWasOn = false
 
 local dripMusic = {Sound("amongus/dripmusic1.mp3"), Sound("amongus/dripmusic2.mp3"), Sound("amongus/dripmusic3.mp3")}
 
@@ -718,6 +719,13 @@ function EVENT:Begin()
         table.insert(mults, GetConVar("randomat_amongus_player_speed"):GetFloat())
     end)
 
+    -- Disabling sprinting
+    if not sprintingCvar:GetBool() then
+        sprintingWasOn = GetGlobalBool("ttt_sprint_enabled")
+        SetGlobalBool("ttt_sprint_enabled", false)
+        self.AddHook("TTTSprintStaminaPost", function() return 0 end)
+    end
+
     -- Walk speed can be changed like in among us
     -- Scales the player speed on the client
     net.Start("RdmtSetSpeedMultiplier")
@@ -1231,6 +1239,11 @@ function EVENT:End()
         net.Broadcast()
         -- Disallowing the randomat end function from being run again until the randomat is activated again
         amongusRandomat = false
+
+        -- Re-enabling sprinting
+        if sprintingWasOn then
+            SetGlobalBool("ttt_sprint_enabled", true)
+        end
     end
 end
 
