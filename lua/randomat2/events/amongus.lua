@@ -720,10 +720,17 @@ function EVENT:Begin()
     end)
 
     -- Disabling sprinting
+    -- CR Replicated convar
     if not sprintingCvar:GetBool() then
-        sprintingWasOn = GetGlobalBool("ttt_sprint_enabled")
-        SetGlobalBool("ttt_sprint_enabled", false)
-        self.AddHook("TTTSprintStaminaPost", function() return 0 end)
+        Randomat:HandleReplicatedValue(function()
+            sprintingWasOn = GetConVar("ttt_sprint_enabled"):GetBool()
+            GetConVar("ttt_sprint_enabled"):SetBool(false)
+        end, function()
+            sprintingWasOn = GetGlobalBool("ttt_sprint_enabled")
+            SetGlobalBool("ttt_sprint_enabled", false)
+        end)
+
+        self:AddHook("TTTSprintStaminaPost", function() return 0 end)
     end
 
     -- Walk speed can be changed like in among us
@@ -1241,8 +1248,13 @@ function EVENT:End()
         amongusRandomat = false
 
         -- Re-enabling sprinting
+        -- CR Replicated convar
         if sprintingWasOn then
-            SetGlobalBool("ttt_sprint_enabled", true)
+            Randomat:HandleReplicatedValue(function()
+                GetConVar("ttt_sprint_enabled"):SetBool(true)
+            end, function()
+                SetGlobalBool("ttt_sprint_enabled", true)
+            end)
         end
     end
 end
