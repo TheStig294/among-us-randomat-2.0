@@ -1,7 +1,9 @@
-_This mod adds a single randomat event to TTT, which turns the round into a game of Among Us!_\
-_Most of the usual options from Among Us are below, plus a few more!_
+# Among Us Randomat Event
 
-# Randomat Options
+This mod adds a single randomat event to TTT, which turns the round into a game of Among Us!\
+Most of the usual options from Among Us are below, plus a few more!
+
+## Randomat Options
 
 _Words in italics_ are console commands. Press ` or ~ in a game of TTT to open the console and type in console commands (plus a space and a number) to change this mod’s settings. \
 \
@@ -57,3 +59,14 @@ Enable sprinting during the randomat\
 \
 _randomat_amongus_music_ - Default: 1 -\
 Play the Among Us drip music
+
+## Credits
+
+Thank you very much __"Mr J"__ and __"Hladenz"__ for creating the original version of this randomat:\
+<https://steamcommunity.com/sharedfiles/filedetails/?id=2232190265>\
+\
+Special thanks to __"Malivil"__ for the randomat base functions!\
+\
+All credit for the "Among Us Crewmate + Corpse Playermodel" goes to __"Bytewave"__ and __"Adam"__\
+Licence: CC BY-NC-SA 4.0 <https://github.com/NotMyWing/GarrysModAmongUs/blob/master/LICENSE_ART>\
+Original mod: <https://steamcommunity.com/workshop/filedetails/?id=2313802230>
