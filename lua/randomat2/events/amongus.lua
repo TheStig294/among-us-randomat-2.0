@@ -365,9 +365,9 @@ function EVENT:Begin()
                         return true
                     end
                 else
-                    -- Mute all other sounds
                     return false
                 end
+                -- Mute all other sounds
             end
         end)
 
@@ -848,8 +848,10 @@ net.Receive("AmongUsPlayerVoted", function(ln, ply)
         end
 
         -- Add a vote to the '[Skip Vote]' tally
-        playervotes["[Skip Vote]"] = playervotes["[Skip Vote]"] + 1
-        num = playervotes["[Skip Vote]"]
+        if playervotes["[Skip Vote]"] then
+            playervotes["[Skip Vote]"] = playervotes["[Skip Vote]"] + 1
+            num = playervotes["[Skip Vote]"]
+        end
     end
 
     -- Updating the total number of votes on the client-side vote window
