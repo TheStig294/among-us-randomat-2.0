@@ -466,7 +466,7 @@ function EVENT:Begin()
         end
 
         -- Setting everyone to either a traitor or innocent, traitors get their 'traitor kill knife'
-        if Randomat:IsTraitorTeam(ply) and (traitorCount < traitorCap) then
+        if traitorCount < traitorCap then
             Randomat:SetRole(ply, ROLE_TRAITOR)
             traitorCount = traitorCount + 1
 
