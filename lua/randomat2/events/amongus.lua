@@ -414,7 +414,7 @@ function EVENT:Begin()
         -- Artificially adding to the guns found counter if a gun hasn't been found in the last 15 seconds to prevent guns that are out of bounds preventing a win to ensure the game is on a timer
         -- The guns are added after a random amount of extra seconds
         timer.Create("AmongUsTotalWeaponDecrease", 15, 0, function()
-            timer.Simple(math.random(1, 10), function()
+            timer.Simple(math.random(10), function()
                 if not (roundOver or meetingActive) then
                     weaponsFound = weaponsFound + math.Round(wepspawns * 1 / 30)
                     net.Start("AmongUsTaskBarUpdate")
@@ -493,7 +493,7 @@ function EVENT:Begin()
             end
 
             -- Chooses a random colour, prevents it from being chosen by anyone else, and sets the player to that colour
-            local randomColor = table.Random(remainingColors)
+            local randomColor = remainingColors[math.random(#remainingColors)]
             table.RemoveByValue(remainingColors, randomColor)
             ply:SetPlayerColor(randomColor:ToVector())
             ply:SetNWString("AmongUsColor", table.KeyFromValue(auColors, randomColor))
@@ -1155,7 +1155,7 @@ function EVENT:AmongUsVoteEnd()
 
             timer.Simple(2.5, function()
                 if not roundOver then
-                    local chosenMusic = dripMusic[math.random(1, #dripMusic)]
+                    local chosenMusic = dripMusic[math.random(#dripMusic)]
                     net.Start("AmongUsForceSound")
                     net.WriteString(chosenMusic)
                     net.Broadcast()

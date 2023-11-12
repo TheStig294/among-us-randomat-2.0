@@ -40,8 +40,8 @@ SWEP.IsSilent = true
 SWEP.DeploySpeed = 2
 
 function SWEP:PrimaryAttack()
-    self.Weapon:SetNextPrimaryFire(CurTime() + self.Primary.Delay)
-    self.Weapon:SetNextSecondaryFire(CurTime() + self.Secondary.Delay)
+    self:SetNextPrimaryFire(CurTime() + self.Primary.Delay)
+    self:SetNextSecondaryFire(CurTime() + self.Secondary.Delay)
     if not IsValid(self:GetOwner()) then return end
     self:GetOwner():LagCompensation(true)
     local spos = self:GetOwner():GetShootPos()
@@ -72,7 +72,7 @@ function SWEP:PrimaryAttack()
 
     -- effects
     if IsValid(hitEnt) then
-        self.Weapon:SendWeaponAnim(ACT_VM_HITCENTER)
+        self:SendWeaponAnim(ACT_VM_HITCENTER)
         local edata = EffectData()
         edata:SetStart(spos)
         edata:SetOrigin(tr.HitPos)
@@ -83,31 +83,29 @@ function SWEP:PrimaryAttack()
             util.Effect("BloodImpact", edata)
         end
     else
-        self.Weapon:SendWeaponAnim(ACT_VM_MISSCENTER)
+        self:SendWeaponAnim(ACT_VM_MISSCENTER)
     end
 
     if SERVER then
         self:GetOwner():SetAnimation(PLAYER_ATTACK1)
     end
 
-    if SERVER and tr.Hit and tr.HitNonWorld and IsValid(hitEnt) then
-        if hitEnt:IsPlayer() then
-            -- knife damage is never karma'd, so don't need to take that into
-            -- account we do want to avoid rounding error strangeness caused by
-            -- other damage scaling, causing a death when we don't expect one, so
-            -- when the target's health is close to kill-point we just kill
-            if hitEnt:Health() < (self.Primary.Damage + 10) then
-                self:StabKill(tr, spos, sdest)
-            else
-                local dmg = DamageInfo()
-                dmg:SetDamage(self.Primary.Damage)
-                dmg:SetAttacker(self:GetOwner())
-                dmg:SetInflictor(self.Weapon or self)
-                dmg:SetDamageForce(self:GetOwner():GetAimVector() * 5)
-                dmg:SetDamagePosition(self:GetOwner():GetPos())
-                dmg:SetDamageType(DMG_SLASH)
-                hitEnt:DispatchTraceAttack(dmg, spos + (self:GetOwner():GetAimVector() * 3), sdest)
-            end
+    if SERVER and tr.Hit and tr.HitNonWorld and IsValid(hitEnt) and hitEnt:IsPlayer() then
+        -- knife damage is never karma'd, so don't need to take that into
+        -- account we do want to avoid rounding error strangeness caused by
+        -- other damage scaling, causing a death when we don't expect one, so
+        -- when the target's health is close to kill-point we just kill
+        if hitEnt:Health() < (self.Primary.Damage + 10) then
+            self:StabKill(tr, spos, sdest)
+        else
+            local dmg = DamageInfo()
+            dmg:SetDamage(self.Primary.Damage)
+            dmg:SetAttacker(self:GetOwner())
+            dmg:SetInflictor(self)
+            dmg:SetDamageForce(self:GetOwner():GetAimVector() * 5)
+            dmg:SetDamagePosition(self:GetOwner():GetPos())
+            dmg:SetDamageType(DMG_SLASH)
+            hitEnt:DispatchTraceAttack(dmg, spos + (self:GetOwner():GetAimVector() * 3), sdest)
         end
     end
 
@@ -119,7 +117,7 @@ function SWEP:StabKill(tr, spos, sdest)
     local dmg = DamageInfo()
     dmg:SetDamage(2000)
     dmg:SetAttacker(self:GetOwner())
-    dmg:SetInflictor(self.Weapon or self)
+    dmg:SetInflictor(self)
     dmg:SetDamageForce(self:GetOwner():GetAimVector())
     dmg:SetDamagePosition(self:GetOwner():GetPos())
     dmg:SetDamageType(DMG_SLASH)
@@ -158,8 +156,8 @@ function SWEP:SecondaryAttack()
 end
 
 function SWEP:Equip()
-    self.Weapon:SetNextPrimaryFire(CurTime() + (self.Primary.Delay * 1.5))
-    self.Weapon:SetNextSecondaryFire(CurTime() + (self.Secondary.Delay * 1.5))
+    self:SetNextPrimaryFire(CurTime() + (self.Primary.Delay * 1.5))
+    self:SetNextSecondaryFire(CurTime() + (self.Secondary.Delay * 1.5))
 end
 
 function SWEP:PreDrop()
