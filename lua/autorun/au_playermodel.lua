@@ -1,22 +1,21 @@
-local MODELS_TO_REGISTER = {
+local amongUsModels = {
 	["Among Us Crewmate"] = "models/amongus/player/player.mdl",
 	["Among Us Corpse"] = "models/amongus/player/corpse.mdl",
 }
-local PLAYER_VIEW_HEIGHT = 48
 
-for k, v in pairs(MODELS_TO_REGISTER) do
-	player_manager.AddValidModel(k, v)
-	list.Set( "PlayerOptionsModel", k, v)
+for modelName, modelPath in pairs(amongUsModels) do
+	player_manager.AddValidModel(modelName, modelPath)
+	list.Set("PlayerOptionsModel", modelName, modelPath)
 end
 
 if SERVER then
-	hook.Add('PlayerSpawn', 'AU playermodel view height', function (ply)
-		if not IsValid(ply) then return end
+	hook.Add("PlayerSpawn", "AmongUsPlayermodelViewHeight", function(ply)
+		timer.Simple(1, function()
+			if not IsValid(ply) then return end
 
-		timer.Simple(1, function ()
-			for _, v in pairs(MODELS_TO_REGISTER) do
-				if ply:GetModel() == v then
-					ply:SetViewOffset(Vector(0, 0, PLAYER_VIEW_HEIGHT))
+			for _, model in pairs(amongUsModels) do
+				if ply:GetModel() == model then
+					ply:SetViewOffset(Vector(0, 0, 48))
 					break
 				else
 					ply:SetViewOffset(Vector(0, 0, 64))
