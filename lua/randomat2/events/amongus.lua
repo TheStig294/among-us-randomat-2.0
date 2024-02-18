@@ -943,7 +943,6 @@ function EVENT:AmongUsVote(findername, emergencyMeeting)
         end
 
         RunConsoleCommand("phys_timescale", "0")
-        RunConsoleCommand("ragdoll_sleepaftertime", "0")
         removeHurt = true
     end
 
@@ -1015,7 +1014,6 @@ function EVENT:AmongUsVoteEnd()
         end
 
         RunConsoleCommand("phys_timescale", "1")
-        RunConsoleCommand("ragdoll_sleepaftertime", "1")
     end
 
     -- Tally up votes and the players who are alive and can therefore vote
@@ -1239,7 +1237,6 @@ function EVENT:End()
         timer.Remove("AmongUsSabotageO2")
         timer.Remove("AmongUsSabotageReactor")
         RunConsoleCommand("phys_timescale", "1")
-        RunConsoleCommand("ragdoll_sleepaftertime", "1")
         -- Close the vote window if it is open
         net.Start("AmongUsVoteEnd")
         net.Broadcast()
