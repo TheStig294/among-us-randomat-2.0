@@ -61,7 +61,7 @@ _randomat_amongus_music_ - Default: 1 -\
 Play the Among Us drip music\
 \
 _randomat_amongus_traitor_cap_ - Default: 0 -\
-Max number of traitors, set to 0 to disable
+Max number of traitors, set to 0 to disable and instead use the original formula from Among Us
 
 ## Credits
 
