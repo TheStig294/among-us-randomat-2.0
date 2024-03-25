@@ -58,7 +58,10 @@ _randomat_amongus_sprint_ - Default: 1 -\
 Enable sprinting during the randomat\
 \
 _randomat_amongus_music_ - Default: 1 -\
-Play the Among Us drip music
+Play the Among Us drip music\
+\
+_randomat_amongus_traitor_cap_ - Default: 0 -\
+Max number of traitors, set to 0 to disable
 
 ## Credits
 

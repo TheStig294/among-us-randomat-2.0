@@ -68,6 +68,8 @@ local sprintingCvar = CreateConVar("randomat_amongus_sprint", 1, {FCVAR_ARCHIVE,
 
 CreateConVar("randomat_amongus_music", 1, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Play the Among Us drip music", 0, 1)
 
+local traitorCapCvar = CreateConVar("randomat_amongus_traitor_cap", 0, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Max number of traitors, set to 0 to disable", 0)
+
 -- Variables needed across multiple functions
 local amongUsMap = game.GetMap() == "ttt_amongusskeld"
 local playerColors = {}
@@ -374,6 +376,8 @@ function EVENT:Begin()
         local emergencyMeetingButtonPos = Vector(-473.000000, -91.000000, 96.000000)
 
         self:AddHook("PlayerUse", function(ply, ent)
+            -- Don't call a second meeting when one is already active
+            if meetingActive then return end
             if not IsValid(ent) then return end
             if ent:GetClass() ~= "func_button" then return end
 
@@ -444,11 +448,12 @@ function EVENT:Begin()
     -- Adding the colour table to a different table so if more than 12 people are playing, the choosable colours are able to be reset
     local remainingColors = {}
     table.Add(remainingColors, auColors)
-    -- Thanks Desmos + Among Us wiki, this number of traitors ensures games do not instantly end with a double kill
-    local traitorCap = math.floor((#self:GetAlivePlayers() / 2) - 1.5)
+    -- Determining number of traitors
+    local traitorCap = traitorCapCvar:GetInt()
 
-    if traitorCap <= 0 then
-        traitorCap = 1
+    if traitorCap == 0 then
+        -- Thanks Desmos + Among Us wiki, this number of traitors ensures games do not instantly end with a double kill
+        traitorCap = math.max(math.floor((#self:GetAlivePlayers() / 2) - 1.5), 1)
     end
 
     for _, ply in pairs(self:GetPlayers(true)) do
@@ -710,6 +715,8 @@ function EVENT:Begin()
 
     -- Initiates a vote when a body is inspected
     self:AddHook("TTTBodyFound", function(finder, deadply, rag)
+        -- Don't call a second meeting when one is already active
+        if meetingActive then return end
         self:AmongUsVote(finder:Nick())
     end)
 
@@ -1262,7 +1269,7 @@ end
 function EVENT:GetConVars()
     local sliders = {}
 
-    for _, v in pairs({"voting_timer", "discussion_timer", "votepct", "knife_cooldown", "emergency_delay", "emergency_meetings", "task_threshhold"}) do
+    for _, v in pairs({"voting_timer", "discussion_timer", "votepct", "knife_cooldown", "emergency_delay", "emergency_meetings", "task_threshhold", "traitor_cap"}) do
         local name = "randomat_" .. self.id .. "_" .. v
 
         if ConVarExists(name) then
