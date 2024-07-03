@@ -316,6 +316,13 @@ if amongUsMap then
         net.Start("AmongUsEventRoundEnd")
         net.Broadcast()
     end)
+
+    hook.Add("TTTPrepareRound", "AmongUsMapResetRound", function()
+        o2SabotagePressedO2 = false
+        o2SabotagePressedAdmin = false
+        o2SabotageWin = false
+        reactorSabotageWin = false
+    end)
 end
 
 function EVENT:Begin()
@@ -1208,10 +1215,6 @@ function EVENT:End()
         meetingActive = false
         emergencyButtonTriggerCount = 0
         traitorCount = 0
-        o2SabotagePressedO2 = false
-        o2SabotagePressedAdmin = false
-        o2SabotageWin = false
-        reactorSabotageWin = false
 
         -- Turn the floor weapons giver mod back on if installed and not on the among us map as that's handled differently
         if not amongUsMap and ConVarExists("ttt_floor_weapons_giver") then
