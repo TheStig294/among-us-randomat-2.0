@@ -15,6 +15,7 @@ local foundweps = 0
 local livefoundweps = 0
 local emergencyMeetingsLeft = 0
 local amongUsMap = game.GetMap() == "ttt_amongusskeld"
+local roundOver = true
 
 -- Plays the impostor kill 'squlech' sound on demand
 net.Receive("AmongUsSqulech", function()
@@ -63,6 +64,7 @@ end)
 
 -- All functions called when this randomat starts
 net.Receive("AmongUsEventBegin", function()
+    roundOver = false
     -- Stopping the TTT role hint box from covering the among us intro images
     amongUsStartPopupDuration = GetConVar("ttt_startpopup_duration"):GetInt()
     RunConsoleCommand("ttt_startpopup_duration", "0")
@@ -72,7 +74,7 @@ net.Receive("AmongUsEventBegin", function()
     -- Displays a message if the sprint key is pressed while sprinting is disabled 
     -- Handles a player pressing the emergency meeting button 
     hook.Add("PlayerBindPress", "AmongUsRandomatBuyMenuDisable", function(ply, bind, pressed)
-        if (string.find(bind, "+menu_context")) then
+        if string.find(bind, "+menu_context") then
             if amongUsMap and firstPress then
                 ply:PrintMessage(HUD_PRINTTALK, "To call an emergency meeting, find the emergency meeting button")
             elseif ply:Alive() == false and firstPress then
@@ -162,6 +164,8 @@ net.Receive("AmongUsEventBegin", function()
 
     -- Adds the taskbar after the among us intro popups are done
     timer.Simple(11, function()
+        if roundOver then return end
+
         if amongUsMap then
             timer.Simple(2, function()
                 -- Adds an on-screen message to players telling them how to complete tasks on the special among us map: ttt_amongusskeld
@@ -252,7 +256,7 @@ net.Receive("AmongUsVoteBegin", function()
     votingList:AddColumn("Votes")
 
     for _, ply in pairs(player.GetAll()) do
-        if (ply:Alive() and not ply:IsSpec()) then
+        if ply:Alive() and not ply:IsSpec() then
             votingList:AddLine(ply:Nick(), 0)
         end
     end
@@ -321,27 +325,32 @@ net.Receive("AmongUsShhPopup", function()
     image:SetSize(xSize, ySize)
 
     timer.Simple(4, function()
-        surface.PlaySound("amongus/roundbegin.mp3")
-
-        -- If there are more than 3 traitors, a generic intro popup is shown (where the number of traitors among us isn't mentioned)
-        if traitorCount < 4 then
-            if LocalPlayer():GetRole() == ROLE_INNOCENT then
-                image:SetImage("materials/vgui/ttt/amongus/crewmate" .. traitorCount .. ".png")
-            else
-                image:SetImage("materials/vgui/ttt/amongus/impostor" .. traitorCount .. ".png")
-            end
-        else
-            if LocalPlayer():GetRole() == ROLE_INNOCENT then
-                image:SetImage("materials/vgui/ttt/amongus/crewmate.png")
-            else
-                image:SetImage("materials/vgui/ttt/amongus/impostor1.png")
-            end
-        end
-
-        timer.Simple(5, function()
+        if roundOver then
             shhPopup:Close()
             LocalPlayer():ScreenFade(SCREENFADE.IN, Color(0, 0, 0, 255), 1, 0)
-        end)
+        else
+            surface.PlaySound("amongus/roundbegin.mp3")
+
+            -- If there are more than 3 traitors, a generic intro popup is shown (where the number of traitors among us isn't mentioned)
+            if traitorCount < 4 then
+                if LocalPlayer():GetRole() == ROLE_INNOCENT then
+                    image:SetImage("materials/vgui/ttt/amongus/crewmate" .. traitorCount .. ".png")
+                else
+                    image:SetImage("materials/vgui/ttt/amongus/impostor" .. traitorCount .. ".png")
+                end
+            else
+                if LocalPlayer():GetRole() == ROLE_INNOCENT then
+                    image:SetImage("materials/vgui/ttt/amongus/crewmate.png")
+                else
+                    image:SetImage("materials/vgui/ttt/amongus/impostor1.png")
+                end
+            end
+
+            timer.Simple(5, function()
+                shhPopup:Close()
+                LocalPlayer():ScreenFade(SCREENFADE.IN, Color(0, 0, 0, 255), 1, 0)
+            end)
+        end
     end)
 end)
 
@@ -534,6 +543,7 @@ net.Receive("AmongUsEventRoundEnd", function()
     firstEmergencyMeetingBindMessage = true
     foundweps = 0
     livefoundweps = 0
+    roundOver = true
     -- Resetting startup popup duration to default
     RunConsoleCommand("ttt_startpopup_duration", tostring(amongUsStartPopupDuration))
 end)

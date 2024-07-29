@@ -478,7 +478,7 @@ function EVENT:Begin()
         end
 
         -- Setting everyone to either a traitor or innocent, traitors get their 'traitor kill knife'
-        if traitorCount < traitorCap then
+        if traitorCount < traitorCap and ply:Alive() and not ply:IsSpec() then
             Randomat:SetRole(ply, ROLE_TRAITOR)
             traitorCount = traitorCount + 1
 
@@ -493,6 +493,7 @@ function EVENT:Begin()
         -- Sets all living players to an among us playermodel
         -- Wait a few seconds for the among us popup to come on screen so we can hide the changing of everyone's playermodels
         timer.Simple(3, function()
+            if roundOver then return end
             -- Save a player's model colour, to be restored at the end of the round
             playerColors[ply] = ply:GetPlayerColor()
             -- Sets their model to the Among Us model
@@ -517,11 +518,13 @@ function EVENT:Begin()
 
         -- Reminding everyone they can press the buy menu button to call an emergency meeting
         timer.Simple(10, function()
+            if roundOver then return end
             ply:Freeze(false)
             net.Start("AmongUsEmergencyMeetingBind")
             net.Send(ply)
 
             timer.Simple(1, function()
+                if roundOver then return end
                 net.Start("AmongUsForceSound")
                 net.WriteString("amongus/dripmusic1.mp3")
                 net.Send(ply)
@@ -759,6 +762,7 @@ function EVENT:Begin()
     end)
 
     timer.Simple(1.5, function()
+        if roundOver then return end
         net.Start("AmongUsShhPopup")
         net.WriteUInt(traitorCount, 8)
         net.Broadcast()
@@ -766,6 +770,8 @@ function EVENT:Begin()
 
     -- Creating a timer to strip players of any weapons they pick up
     timer.Simple(2, function()
+        if roundOver then return end
+
         timer.Create("AmongUsInnocentTask", 0.1, 0, function()
             for _, ply in pairs(self.GetAlivePlayers()) do
                 for _, wep in pairs(ply:GetWeapons()) do
@@ -786,6 +792,7 @@ function EVENT:Begin()
     -- Adds fog to lower the distance players can see
     -- Adds the innocent 'task' progress bar
     timer.Simple(2, function()
+        if roundOver then return end
         net.Start("AmongUsEventBegin")
         net.WriteInt(wepspawns, 16)
         net.Broadcast()
@@ -1160,20 +1167,18 @@ function EVENT:AmongUsVoteEnd()
 
     -- Play the Among Us text sound, with a 1 second delay so it doesn't play over the randomat alert sound
     timer.Simple(1, function()
-        if not roundOver then
-            net.Start("AmongUsForceSound")
-            net.WriteString("amongus/votetext.mp3")
-            net.Broadcast()
+        if roundOver then return end
+        net.Start("AmongUsForceSound")
+        net.WriteString("amongus/votetext.mp3")
+        net.Broadcast()
 
-            timer.Simple(2.5, function()
-                if not roundOver then
-                    local chosenMusic = dripMusic[math.random(#dripMusic)]
-                    net.Start("AmongUsForceSound")
-                    net.WriteString(chosenMusic)
-                    net.Broadcast()
-                end
-            end)
-        end
+        timer.Simple(2.5, function()
+            if roundOver then return end
+            local chosenMusic = dripMusic[math.random(#dripMusic)]
+            net.Start("AmongUsForceSound")
+            net.WriteString(chosenMusic)
+            net.Broadcast()
+        end)
     end)
 end
 
@@ -1266,6 +1271,20 @@ function EVENT:End()
             end)
         end
     end
+end
+
+-- Only allow triggering the event if at least 3 players are alive to prevent the round from instantly ending
+function EVENT:Condition()
+    local plyCount = 0
+
+    for _, ply in player.Iterator() do
+        if ply:Alive() and not ply:IsSpec() then
+            plyCount = plyCount + 1
+            if plyCount > 2 then return true end
+        end
+    end
+
+    return false
 end
 
 -- Populating this randomat's ULX menu if the randomat ULX menu mod is installed
