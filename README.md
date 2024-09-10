@@ -73,3 +73,6 @@ Special thanks to __"Malivil"__ for the randomat base functions!\
 All credit for the "Among Us Crewmate + Corpse Playermodel" goes to __"Bytewave"__ and __"Adam"__\
 Licence: CC BY-NC-SA 4.0 <https://github.com/NotMyWing/GarrysModAmongUs/blob/master/LICENSE_ART>\
 Original mod: <https://steamcommunity.com/workshop/filedetails/?id=2313802230>
+
+## Steam Workshop Link
+https://steamcommunity.com/sharedfiles/filedetails/?id=2428372933
