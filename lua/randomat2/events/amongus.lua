@@ -32,44 +32,25 @@ util.AddNetworkString("AmongUsDrawSprite")
 util.AddNetworkString("AmongUsStopSprite")
 util.AddNetworkString("AmongUsAlarm")
 util.AddNetworkString("AmongUsAlarmStop")
-
 -- Most of the usual Among Us options, plus more! (change these in the console or via the randomat ULX mod)
-CreateConVar("randomat_amongus_voting_timer", 30, {FCVAR_NOTIFY, FCVAR_ARCHIVE}, "Seconds voting time lasts", 0, 300)
-
-CreateConVar("randomat_amongus_discussion_timer", 15, {FCVAR_NOTIFY, FCVAR_ARCHIVE}, "Seconds discussion time lasts, set to 0 to disable", 0, 120)
-
-CreateConVar("randomat_amongus_votepct", 0, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Vote percentage required to eject", 0, 100)
-
-CreateConVar("randomat_amongus_freeze", 1, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Freeze players in place while voting", 0, 1)
-
-CreateConVar("randomat_amongus_knife_cooldown", 20, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Traitor knife kill cooldown in seconds", 10, 60)
-
-CreateConVar("randomat_amongus_emergency_delay", 15, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Emergency meeting delay in seconds", 0, 60)
-
-CreateConVar("randomat_amongus_confirm_ejects", 0, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Notify everyone of a player's role when voted out", 0, 1)
-
-CreateConVar("randomat_amongus_emergency_meetings", 1, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "No. of emergency meetings per player", 0, 9)
-
-CreateConVar("randomat_amongus_anonymous_voting", 0, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Anonymous voting", 0, 1)
-
-CreateConVar("randomat_amongus_player_speed", 1, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Player speed multiplier", 0.5, 3)
-
-CreateConVar("randomat_amongus_innocent_vision", 1, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Innocent vision multiplier", 0.2, 5)
-
-CreateConVar("randomat_amongus_traitor_vision", 1.5, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Traitor vision multiplier", 0.2, 5)
-
-CreateConVar("randomat_amongus_taskbar_update", 0, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Only update taskbar at meetings", 0, 1)
-
-CreateConVar("randomat_amongus_auto_trigger", 1, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Trigger every round on special map: ttt_amongusskeld", 0, 1)
-
-CreateConVar("randomat_amongus_task_threshhold", 60, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Seconds until tasks/guns aren't found too quickly", 0, 120)
-
-local sprintingCvar = CreateConVar("randomat_amongus_sprint", 1, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Enable sprinting during the randomat", 0, 1)
-
-CreateConVar("randomat_amongus_music", 1, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Play the Among Us drip music", 0, 1)
-
-local traitorCapCvar = CreateConVar("randomat_amongus_traitor_cap", 0, {FCVAR_ARCHIVE, FCVAR_NOTIFY}, "Max number of traitors, set to 0 to disable", 0)
-
+CreateConVar("randomat_amongus_voting_timer", 30, FCVAR_ARCHIVE, "Seconds voting time lasts", 0, 300)
+CreateConVar("randomat_amongus_discussion_timer", 15, FCVAR_ARCHIVE, "Seconds discussion time lasts, set to 0 to disable", 0, 120)
+CreateConVar("randomat_amongus_votepct", 0, FCVAR_ARCHIVE, "Vote percentage required to eject", 0, 100)
+CreateConVar("randomat_amongus_freeze", 1, FCVAR_ARCHIVE, "Freeze players in place while voting", 0, 1)
+CreateConVar("randomat_amongus_knife_cooldown", 20, FCVAR_ARCHIVE, "Traitor knife kill cooldown in seconds", 10, 60)
+CreateConVar("randomat_amongus_emergency_delay", 15, FCVAR_ARCHIVE, "Emergency meeting delay in seconds", 0, 60)
+CreateConVar("randomat_amongus_confirm_ejects", 0, FCVAR_ARCHIVE, "Notify everyone of a player's role when voted out", 0, 1)
+CreateConVar("randomat_amongus_emergency_meetings", 1, FCVAR_ARCHIVE, "No. of emergency meetings per player", 0, 9)
+CreateConVar("randomat_amongus_anonymous_voting", 0, FCVAR_ARCHIVE, "Anonymous voting", 0, 1)
+CreateConVar("randomat_amongus_player_speed", 1, FCVAR_ARCHIVE, "Player speed multiplier", 0.5, 3)
+CreateConVar("randomat_amongus_innocent_vision", 1, FCVAR_ARCHIVE, "Innocent vision multiplier", 0.2, 5)
+CreateConVar("randomat_amongus_traitor_vision", 1.5, FCVAR_ARCHIVE, "Traitor vision multiplier", 0.2, 5)
+CreateConVar("randomat_amongus_taskbar_update", 0, FCVAR_ARCHIVE, "Only update taskbar at meetings", 0, 1)
+CreateConVar("randomat_amongus_auto_trigger", 1, FCVAR_ARCHIVE, "Trigger every round on special map: ttt_amongusskeld", 0, 1)
+CreateConVar("randomat_amongus_task_threshhold", 60, FCVAR_ARCHIVE, "Seconds until tasks/guns aren't found too quickly", 0, 120)
+local sprintingCvar = CreateConVar("randomat_amongus_sprint", 1, FCVAR_ARCHIVE, "Enable sprinting during the randomat", 0, 1)
+CreateConVar("randomat_amongus_music", 1, FCVAR_ARCHIVE, "Play the Among Us drip music", 0, 1)
+local traitorCapCvar = CreateConVar("randomat_amongus_traitor_cap", 0, FCVAR_ARCHIVE, "Max number of traitors, set to 0 to disable", 0)
 -- Variables needed across multiple functions
 local amongUsMap = game.GetMap() == "ttt_amongusskeld"
 local playerColors = {}
