@@ -1,26 +1,13 @@
-local amongUsModels = {
-	["Among Us Crewmate"] = "models/amongus/player/player.mdl",
-	["Among Us Corpse"] = "models/amongus/player/corpse.mdl",
-}
+player_manager.AddValidModel("Among Us Crewmate", "models/amongus/player/player.mdl")
+list.Set("PlayerOptionsModel", "Among Us Crewmate", "models/amongus/player/player.mdl")
+player_manager.AddValidModel("Among Us Corpse", "models/amongus/player/corpse.mdl")
+list.Set("PlayerOptionsModel", "Among Us Corpse", "models/amongus/player/corpse.mdl")
 
-for modelName, modelPath in pairs(amongUsModels) do
-	player_manager.AddValidModel(modelName, modelPath)
-	list.Set("PlayerOptionsModel", modelName, modelPath)
-end
-
-if SERVER then
-	hook.Add("PlayerSpawn", "AmongUsPlayermodelViewHeight", function(ply)
-		timer.Simple(1, function()
-			if not IsValid(ply) then return end
-
-			for _, model in pairs(amongUsModels) do
-				if ply:GetModel() == model then
-					ply:SetViewOffset(Vector(0, 0, 48))
-					break
-				else
-					ply:SetViewOffset(Vector(0, 0, 64))
-				end
-			end
-		end)
-	end)
-end
+hook.Add("PlayerSpawn", "AmongUsPlayermodelViewHeight", function(ply)
+    timer.Simple(0.1, function()
+        if IsValid(ply) and (ply:GetModel() == "models/amongus/player/player.mdl" or ply:GetModel() == "models/amongus/player/corpse.mdl") then
+            ply:SetViewOffset(Vector(0, 0, 48))
+            ply:SetViewOffsetDucked(Vector(0, 0, 30))
+        end
+    end)
+end)

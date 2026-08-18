@@ -129,7 +129,7 @@ if amongUsMap then
 
     hook.Add("TTTBeginRound", "AmongUsMapAutoTrigger", function()
         if autoTrigger then
-            Randomat:SilentTriggerEvent("amongus", player.GetAll()[1])
+            Randomat:SilentTriggerEvent("amongus", Entity(1))
         end
     end)
 
@@ -152,7 +152,7 @@ if amongUsMap then
         if sounddata.SoundName == "npc/overwatch/cityvoice/fcitadel_45sectosingularity.wav" then
             -- Adding on-screen alert for sabotage
             timer.Create("AmongUsSabotageMessage", 1, 5, function()
-                for _, ply in ipairs(player.GetAll()) do
+                for _, ply in player.Iterator() do
                     if ply:GetRole() ~= ROLE_TRAITOR then
                         ply:PrintMessage(HUD_PRINTCENTER, "The reactor is melting down in 45 seconds! \nStand at the two eye scanners in Reactor to fix it!")
                     end
@@ -204,7 +204,7 @@ if amongUsMap then
             return false
         elseif sounddata.SoundName == "npc/overwatch/cityvoice/fprison_nonstandardexogen.wav" then
             timer.Create("AmongUsSabotageMessage", 1, 5, function()
-                for _, ply in ipairs(player.GetAll()) do
+                for _, ply in player.Iterator() do
                     if ply:GetRole() ~= ROLE_TRAITOR then
                         ply:PrintMessage(HUD_PRINTCENTER, "O2 will be depleted in 30 seconds! \nPress the keypads in O2 and Admin to fix it!")
                     end
@@ -307,8 +307,6 @@ if amongUsMap then
 end
 
 function EVENT:Begin()
-    -- Workaround to prevent the end function from being triggered before the begin function, letting know that the randomat has indeed been activated and the randomat end function is now allowed to be run
-    amongusRandomat = true
     roundOver = false
     SetGlobalBool("AmongUsGunWinRemove", false)
     SetGlobalBool("AmongUsTasksTooFast", false)
@@ -828,7 +826,7 @@ net.Receive("AmongUsPlayerVoted", function(ln, ply)
 
             -- Tell everyone who they voted for in chat, if enabled
             if not GetConVar("randomat_amongus_anonymous_voting"):GetBool() then
-                for _, va in pairs(player.GetAll()) do
+                for _, va in player.Iterator() do
                     va:PrintMessage(HUD_PRINTTALK, ply:Nick() .. " has voted to eject " .. votee)
                 end
             end
@@ -845,7 +843,7 @@ net.Receive("AmongUsPlayerVoted", function(ln, ply)
         playersVoted[ply] = "[Skip Vote]" -- insert player and target into table
 
         -- Tell everyone they voted to skip
-        for ka, va in pairs(player.GetAll()) do
+        for _, va in player.Iterator() do
             va:PrintMessage(HUD_PRINTTALK, ply:Nick() .. " has voted to skip")
         end
 
@@ -881,7 +879,7 @@ function EVENT:AmongUsVote(findername, emergencyMeeting)
     net.Broadcast()
 
     -- Pause any timers including knife cooldowns of traitors, if currently running
-    for _, ply in ipairs(player.GetAll()) do
+    for _, ply in player.Iterator() do
         local timerName = "AmongUsRandomatKnifeTimer" .. ply:SteamID64()
 
         if timer.Exists(timerName) then
@@ -1112,7 +1110,7 @@ function EVENT:AmongUsVoteEnd()
     net.Broadcast()
 
     -- Resume any timers, e.g. if knives were on cooldown when the vote started
-    for _, ply in ipairs(player.GetAll()) do
+    for _, ply in player.Iterator() do
         local timerName = "AmongUsRandomatKnifeTimer" .. ply:SteamID64()
 
         if timer.Exists(timerName) then
@@ -1184,9 +1182,9 @@ function EVENT:AmongUsConVarResync()
     SetGlobalBool("randomat_amongus_music", GetConVar("randomat_amongus_music"):GetBool())
 end
 
-function EVENT:End()
+function EVENT:End(isActive)
     -- Workaround to prevent the end function from being triggered before the begin function
-    if amongusRandomat then
+    if isActive then
         -- Resetting variables
         table.Empty(playersVoted)
         table.Empty(aliveplys)
@@ -1208,7 +1206,7 @@ function EVENT:End()
         end
 
         -- Resetting player propterites
-        for _, ply in pairs(player.GetAll()) do
+        for _, ply in player.Iterator() do
             if playerColors[ply] ~= nil then
                 ply:SetPlayerColor(playerColors[ply])
             end
@@ -1239,8 +1237,6 @@ function EVENT:End()
         -- Letting each player's client know the randomat is over
         net.Start("AmongUsEventRoundEnd")
         net.Broadcast()
-        -- Disallowing the randomat end function from being run again until the randomat is activated again
-        amongusRandomat = false
 
         -- Re-enabling sprinting
         -- CR Replicated convar
